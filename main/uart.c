@@ -22,9 +22,6 @@ static void echo_task(void *arg) {
   uint8_t *data = (uint8_t *)malloc(BUF_SIZE);
 
   while (1) {
-    UBaseType_t uxHighWaterMark;
-    uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-    printf("uart: %u\n", uxHighWaterMark);
     // Read data from the UART
     int len = uart_read_bytes(PORT_NUM, data, (BUF_SIZE - 1),
                               20 / portTICK_PERIOD_MS);

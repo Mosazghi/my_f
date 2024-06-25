@@ -17,5 +17,4 @@ void app_main(void) {
   init();
 
   mqtt_subscribe("test");
-  // mqtt_subscribe("test2");
 }
