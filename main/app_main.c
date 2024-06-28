@@ -13,8 +13,9 @@ static void init() {
 
   mqtt_app_start();
 }
+
 void app_main(void) {
   init();
 
-  mqtt_subscribe("test");
+  mqtt_subscribe("newScan");
 }
