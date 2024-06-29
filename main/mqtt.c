@@ -51,7 +51,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
            base, (int)event_id);
   mqtt_event_handler_cb(event_data);
 }
-void mqtt_app_start(const char *ip, const char *port) {
+void mqtt_app_start() {
   esp_mqtt_client_config_t mqtt_cfg = {
       .broker.address.uri = MQTT_URI,
   };
@@ -81,7 +81,7 @@ void mqtt_publish(const char *topic, const char *data) {
     while (!mqtt_connected) {
       vTaskDelay(2000 / portTICK_PERIOD_MS);
       printf("MQTT is not connected\n");
-      esp_mqtt_client_publish(_client, topic, data, 0, 0, 0);
+      mqtt_app_start();
     }
   }
 }
