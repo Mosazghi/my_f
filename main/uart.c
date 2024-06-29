@@ -1,11 +1,12 @@
 #include "uart.h"
 #include "esp_log.h"
+#include "esp_lvgl_port.h"
+#include "lvgl.h"
 #include "mqtt.h"
 #include <cJSON.h>
 #include <stdio.h>
-
 static const char *UART_TAG = "UART";
-
+extern lv_obj_t *label;
 static void echo_task(void *arg) {
   uart_config_t uart_config = {
       .baud_rate = BUAD_RATE,
@@ -38,7 +39,12 @@ static void echo_task(void *arg) {
       char *json = cJSON_Print(data);
       ESP_LOGI(UART_TAG, "JSON: %s", json);
       mqtt_publish("newScan", json);
-
+      // Update the label with the received date
+      if (lvgl_port_lock(0)) {
+        // clear text
+        lv_label_set_text(label, (char *)code);
+        lvgl_port_unlock();
+      }
       cJSON_free(json);
     }
     cJSON_Delete(data);
@@ -47,5 +53,5 @@ static void echo_task(void *arg) {
 }
 
 void uart_init(void) {
-  xTaskCreate(echo_task, "uart_echo_task", 2048, NULL, 10, NULL);
+  xTaskCreate(echo_task, "uart_echo_task", 1024 * 2, NULL, 10, NULL);
 }
