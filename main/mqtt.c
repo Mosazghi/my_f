@@ -63,25 +63,22 @@ void mqtt_app_start() {
 }
 
 void mqtt_subscribe(const char *topic) {
-  if (mqtt_connected) {
+  if (mqtt_connected)
     esp_mqtt_client_subscribe(_client, topic, 0);
-  } else {
+  else
     while (!mqtt_connected) {
-      vTaskDelay(2000 / portTICK_PERIOD_MS);
-      printf("MQTT is not connected\n");
+      vTaskDelay(1500 / portTICK_PERIOD_MS);
+      printf("CLient is not connected. Resubscribing...\n");
       esp_mqtt_client_subscribe(_client, topic, 0);
     }
-  }
 }
 
-void mqtt_publish(const char *topic, const char *data) {
-  if (mqtt_connected) {
-    esp_mqtt_client_publish(_client, topic, data, 0, 0, 0);
-  } else {
-    while (!mqtt_connected) {
-      vTaskDelay(2000 / portTICK_PERIOD_MS);
-      printf("MQTT is not connected\n");
-      mqtt_app_start();
-    }
-  }
+int mqtt_publish(const char *topic, const char *data) {
+  if (mqtt_connected)
+    return esp_mqtt_client_publish(_client, topic, data, 0, 0, 0);
+  else
+    while (!mqtt_connected)
+      esp_mqtt_client_reconnect(_client);
+
+  return -1;
 }
