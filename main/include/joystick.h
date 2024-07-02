@@ -3,14 +3,15 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "soc/adc_channel.h"
 #include <stdint.h>
 
 #define VRX_PIN ADC1_GPIO32_CHANNEL
 #define VRY_PIN ADC1_GPIO33_CHANNEL
 #define SW_PIN 15
 
-#define LEFT_THRESHOLD 1000
-#define RIGHT_THRESHOLD 3000
+#define LEFT_THRESHOLD 50
+#define RIGHT_THRESHOLD 4000
 #define UP_THRESHOLD 1000
 #define DOWN_THRESHOLD 3000
 

@@ -16,5 +16,5 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 void mqtt_app_start();
 
 void mqtt_subscribe(const char *topic);
-void mqtt_publish(const char *topic, const char *data);
+int mqtt_publish(const char *topic, const char *data);
 #endif
