@@ -2,8 +2,7 @@ use crate::db::{models::RefrigeratorItem, operations::insert_refrigerator_item};
 pub mod types;
 use futures::stream::StreamExt;
 use paho_mqtt as mqtt;
-use reqwest::{Error, Response};
-use serde::Deserialize;
+use reqwest::Error;
 use sqlx::PgPool;
 use std::env;
 use std::{process, time::Duration};
@@ -19,13 +18,14 @@ pub struct MqttClient {
 
 impl MqttClient {
     pub async fn new(pool: PgPool) -> Self {
-        let host = "mqtt://10.161.2.5:1883";
+        // let host = "mqtt://10.161.2.5:1883";
+        let host = "mqtt://192.168.1.168:1883";
 
         println!("Connecting to the MQTT broker at {}", host);
 
         let create_opts = mqtt::CreateOptionsBuilder::new_v3()
             .server_uri(host)
-            .client_id("rust_async_subscribe")
+            .client_id("backend")
             .finalize();
 
         let client = mqtt::AsyncClient::new(create_opts).unwrap_or_else(|e| {
@@ -47,10 +47,8 @@ impl MqttClient {
 
             self.client.connect(conn_opts).await?;
 
-            println!("Subscribing to topics: {:?}", TOPIC);
             self.client.subscribe(TOPIC, QOS).await?;
-
-            println!("Waiting for messages...");
+            println!("Subscribed to topics: {:?}", TOPIC);
 
             let mut rconn_attempt: usize = 0;
 
@@ -58,7 +56,7 @@ impl MqttClient {
                 if let Some(msg) = msg_opt {
                     let topic = msg.topic();
                     let payload = msg.payload_str();
-                    println!("Received a message on topic '{}': {}", topic, payload);
+                    println!("Received a message on topic '{}': {}\n", topic, payload);
                     self.handle_message(msg).await;
                 } else {
                     println!("Lost connection. Attempting reconnect...");
