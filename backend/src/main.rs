@@ -11,8 +11,10 @@ use std::net::SocketAddr;
 use sqlx::postgres::PgPoolOptions;
 use tokio::task;
 
+type Error = Box<dyn std::error::Error>;
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Error> {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -21,9 +23,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect(&database_url)
         .await?;
 
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
 
-    let mut mqtt_client = mqtt::MqttClient::new(pool.clone()).await;
+    let mut mqtt_client = mqtt::MqttClient::new(pool).await;
 
     let mqtt_handle = task::spawn(async move {
         mqtt_client.start().await;
