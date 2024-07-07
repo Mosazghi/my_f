@@ -1,7 +1,7 @@
-#ifndef UART_H
-#define UART_H
+#pragma once
 
 #include "driver/uart.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 #include <stdint.h>
 
@@ -14,13 +14,15 @@
 #define BAUD_RATE (9600)
 
 #define BUF_SIZE (256)
-static void scan_task(void *arg);
 
 typedef struct {
   uint8_t code[BUF_SIZE];
   bool hasScanned;
-  SemaphoreHandle_t scanSemaphore;
+  // Add other fields as necessary
+} scan_data_t;
+
+typedef struct {
+  QueueHandle_t queue;
 } scan_context_t;
 
-void scan_init(scan_context_t *context);
-#endif
+void scan_init();

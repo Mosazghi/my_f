@@ -1,5 +1,4 @@
-#ifndef MQTT_H
-#define MQTT_H
+#pragma once
 
 #include "esp_event_base.h"
 #include "mqtt_client.h"
@@ -17,4 +16,3 @@ void mqtt_app_start();
 
 void mqtt_subscribe(const char *topic);
 int mqtt_publish(const char *topic, const char *data);
-#endif

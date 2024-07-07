@@ -1,5 +1,3 @@
-#include "core/lv_obj.h"
-#include "esp_event.h"
 #include <stdio.h>
 
 #include "display.h"
@@ -11,20 +9,21 @@
 static void init();
 static void init_i2c();
 static void display_to_oled_task();
-
+QueueHandle_t queue;
 void app_main(void) {
-  init();
+  queue = xQueueCreate(10, sizeof(scan_data_t));
 
-  mqtt_subscribe("newScan");
+  init();
+  mqtt_subscribe("rawScan");
+  mqtt_subscribe("scanResult");
 }
 
 static void init() {
-  scan_context_t context = {0};
   wifi_connection();
   vTaskDelay(2000 / portTICK_PERIOD_MS);
   mqtt_app_start();
-  scan_init(&context);
+  scan_init();
   display_init();
 
-  xTaskCreate(joystick_task, "joystick_task", 2048, &context, 10, NULL);
+  xTaskCreate(joystick_task, "joystick_task", 2300, NULL, 10, NULL);
 }

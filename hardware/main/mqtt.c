@@ -1,10 +1,11 @@
 #include "mqtt.h"
 
+#include "display.h"
 #include "esp_log.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
+extern lv_obj_t *statusLabel;
 const char *MQTT_TAG = "MQTT_TCP";
 bool mqtt_connected = false;
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
@@ -31,6 +32,10 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
     printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
     printf("DATA=%.*s\r\n", event->data_len, event->data);
+    if (strcmp(event->topic, "scanResult") == 0) {
+      printf("Data: %s\n", (char *)event->data);
+      // display_set_text_fmt(statusLabel, (char *)event->data);
+    }
 
     break;
   case MQTT_EVENT_ERROR:

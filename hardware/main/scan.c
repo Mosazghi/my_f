@@ -3,14 +3,14 @@
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
 #include "font/lv_symbol_def.h"
+#include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "lvgl.h"
 #include <stdio.h>
 
-// static const char *UART_TAG = "UART";
+extern QueueHandle_t queue;
 
 static void scan_task(void *arg) {
-  scan_context_t *context = (scan_context_t *)arg;
 
   uart_config_t uart_config = {
       .baud_rate = BAUD_RATE,
@@ -25,26 +25,24 @@ static void scan_task(void *arg) {
   ESP_ERROR_CHECK(uart_param_config(PORT_NUM, &uart_config));
   ESP_ERROR_CHECK(uart_set_pin(PORT_NUM, TX_PIN, RX_PIN, RTS, CTS));
 
+  scan_data_t scan_data;
+
   while (1) {
-    int len = uart_read_bytes(PORT_NUM, context->code, (BUF_SIZE - 1),
+    int len = uart_read_bytes(PORT_NUM, scan_data.code, (BUF_SIZE - 1),
                               20 / portTICK_PERIOD_MS);
+    scan_data.hasScanned = (len > 0);
 
-    if (len) {
-      context->code[len] = '\0';
-      context->code[len - 1] = '\0';
+    if (scan_data.hasScanned) {
+      scan_data.code[len] = scan_data.code[len - 1] = '\0';
+      display_set_text_fmt(codeLabel, "CODE: %s", (char *)scan_data.code);
 
-      if (!context->hasScanned) {
-        context->hasScanned = true;
-        xSemaphoreGive(context->scanSemaphore);
+      if (queue != NULL) {
+        xQueueSend(queue, &scan_data, portMAX_DELAY);
       }
-
-      display_set_text_fmt(codeLabel, "CODE: %s", (char *)context->code);
     }
+
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
-void scan_init(scan_context_t *context) {
-  context->scanSemaphore = xSemaphoreCreateBinary();
-  xTaskCreate(scan_task, "scan_task", 1024 * 2, context, 10, NULL);
-}
+void scan_init() { xTaskCreate(scan_task, "scan_task", 2200, NULL, 10, NULL); }

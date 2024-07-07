@@ -1,6 +1,4 @@
-#ifndef WIFI_H
-#define WIFI_H
-
+#pragma once
 #define SSID "Home_Net-55980D"
 #define PASS "runBehomVit4"
 
@@ -20,5 +18,3 @@ static void wifi_event_handler(void *event_handler_arg,
                                void *event_data);
 
 void wifi_connection();
-
-#endif

@@ -13,9 +13,9 @@
 #include "widgets/lv_label.h"
 
 const char *JOYSTICK_TAG = "joystick";
+extern QueueHandle_t queue;
 
 void joystick_task(void *args) {
-  scan_context_t *context = (scan_context_t *)args;
 
   adc_oneshot_unit_handle_t adc1_handle;
   adc_oneshot_unit_init_cfg_t init_config1 = {
@@ -44,9 +44,11 @@ void joystick_task(void *args) {
   command_t command = COMMAND_NONE;
   edit_state_t state = EDIT_DAY;
 
+  scan_data_t scan_data;
+
   while (1) {
-    if (xSemaphoreTake(context->scanSemaphore, portMAX_DELAY)) {
-      while (context->hasScanned) {
+    if (xQueueReceive(queue, &scan_data, portMAX_DELAY)) {
+      while (scan_data.hasScanned) {
         ESP_ERROR_CHECK(
             adc_oneshot_read(adc1_handle, adc1_channel_vrx, &adc_raw[0]));
         ESP_ERROR_CHECK(
@@ -97,23 +99,13 @@ void joystick_task(void *args) {
         if (command & COMMAND_UP) {
           switch (state) {
           case EDIT_DAY:
-            if (exp_date.day == 31)
-              exp_date.day = 1;
-            else
-              exp_date.day++;
-
+            exp_date.day = (exp_date.day == 31) ? 1 : exp_date.day + 1;
             break;
           case EDIT_MONTH:
-            if (exp_date.month == 12)
-              exp_date.month = 1;
-            else
-              exp_date.month++;
+            exp_date.month = (exp_date.month == 12) ? 1 : exp_date.month + 1;
             break;
           case EDIT_YEAR:
-            if (exp_date.year == 2030)
-              exp_date.year = 2024;
-            else
-              exp_date.year++;
+            exp_date.year = (exp_date.year == 2030) ? 2024 : exp_date.year + 1;
             break;
           }
         }
@@ -121,33 +113,27 @@ void joystick_task(void *args) {
         if (command & COMMAND_DOWN) {
           switch (state) {
           case EDIT_DAY:
-            exp_date.day--;
-            if (exp_date.day < 1)
-              exp_date.day = 31;
+            exp_date.day = (exp_date.day == 1) ? 31 : exp_date.day - 1;
             break;
           case EDIT_MONTH:
-            exp_date.month--;
-            if (exp_date.month < 1)
-              exp_date.month = 12;
+            exp_date.month = (exp_date.month == 1) ? 12 : exp_date.month - 1;
             break;
           case EDIT_YEAR:
-            exp_date.year--;
-            if (exp_date.year < 2024)
-              exp_date.year = 2030;
+            exp_date.year = (exp_date.year == 2024) ? 2030 : exp_date.year - 1;
             break;
           }
         }
 
-        display_set_text_fmt(dateLabel, "DATE: %d%s/%d%s/%d%s", exp_date.day,
-                             (state == EDIT_DAY) ? "*" : "", exp_date.month,
-                             (state == EDIT_MONTH) ? "*" : "", exp_date.year,
-                             (state == EDIT_YEAR) ? "*" : "");
+        display_set_text_fmt(dateLabel, "DATE: %02d%s/%02d%s/%d%s",
+                             exp_date.day, (state == EDIT_DAY) ? "*" : "",
+                             exp_date.month, (state == EDIT_MONTH) ? "*" : "",
+                             exp_date.year, (state == EDIT_YEAR) ? "*" : "");
 
         int sw_new = gpio_get_level(SW_PIN);
 
         // if switch is pressed
         if (sw_old == 1 && sw_new == 0) {
-          int err = publish_data(exp_date, (const char *)context->code);
+          int err = publish_data(exp_date, (const char *)scan_data.code);
 
           if (err >= 0) {
             display_set_text_fmt(statusLabel,
@@ -162,19 +148,18 @@ void joystick_task(void *args) {
           exp_date.month = 1;
           exp_date.year = 2024;
 
-          do {
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
-
-            context->hasScanned = false;
-            display_set_text(codeLabel, "Enter code: ");
-            display_set_text(dateLabel, "Waiting for scan...");
-            display_set_text(statusLabel, "");
-          } while (0);
+          scan_data.hasScanned = false;
+          display_set_text(codeLabel, "Enter code: ");
+          display_set_text(dateLabel, "Waiting for scan...");
+          display_set_text(statusLabel, "");
         }
 
         sw_old = sw_new;
+
+        vTaskDelay(150 / portTICK_PERIOD_MS);
       }
     }
-    vTaskDelay(150 / portTICK_PERIOD_MS);
   }
+
+  vTaskDelay(150 / portTICK_PERIOD_MS);
 }

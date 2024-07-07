@@ -12,14 +12,16 @@ char *exp_date_to_string(exp_date_t exp_date) {
 int publish_data(exp_date_t exp_date, const char *code) {
   int err = 0;
   cJSON *data = cJSON_CreateObject();
-  cJSON_AddStringToObject(data, "code", (char *)code);
-  cJSON_AddStringToObject(data, "expDate", exp_date_to_string(exp_date));
+  char *exp_date_str = exp_date_to_string(exp_date);
+  cJSON_AddStringToObject(data, "barcode", (char *)code);
+  cJSON_AddStringToObject(data, "expDate", exp_date_str);
   char *json = cJSON_Print(data);
 
-  err = mqtt_publish("newScan", json);
+  err = mqtt_publish("rawScan", json);
 
   cJSON_free(json);
   cJSON_Delete(data);
+  free(exp_date_str);
 
   return err;
 }

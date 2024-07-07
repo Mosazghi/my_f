@@ -1,5 +1,4 @@
-#ifndef JOYSTICK_H
-#define JOYSTICK_H
+#pragma once
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -14,8 +13,6 @@
 #define RIGHT_THRESHOLD 4000
 #define UP_THRESHOLD 1000
 #define DOWN_THRESHOLD 3000
-
-extern QueueHandle_t date_queue;
 
 typedef enum {
   COMMAND_NONE = 0X00,
@@ -34,4 +31,3 @@ typedef struct {
 typedef enum { EDIT_DAY, EDIT_MONTH, EDIT_YEAR } edit_state_t;
 
 void joystick_task(void *args);
-#endif // JOYSTICK_H

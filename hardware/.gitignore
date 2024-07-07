@@ -1,4 +1,5 @@
 .cache/
+.vscode/
 build/
 managed_components/
 serpl.log
