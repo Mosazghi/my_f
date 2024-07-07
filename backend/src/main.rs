@@ -4,6 +4,7 @@ use std::env;
 pub mod db;
 pub mod mqtt;
 pub mod server;
+pub mod util;
 
 use server::Server;
 use std::net::SocketAddr;

@@ -1,4 +1,3 @@
-use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -8,9 +7,10 @@ pub struct RefrigeratorItemFromMqtt {
     pub expiration_date: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Nutrition {
-    pub display_name: String,
+    #[serde(rename = "display_name")]
+    pub name: String,
     pub amount: f32,
     pub unit: String,
 }
@@ -27,7 +27,7 @@ pub struct ApiResponse {
     pub data: ApiResponseData,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Product {
     pub name: String,
     pub weight: Option<f32>,
@@ -35,4 +35,9 @@ pub struct Product {
     #[serde(skip_serializing)]
     pub nutrition: Option<Vec<Nutrition>>,
     pub image: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MqttResponse {
+    pub message: String,
 }
