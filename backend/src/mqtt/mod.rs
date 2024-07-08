@@ -19,9 +19,7 @@ pub struct MqttClient {
 
 impl MqttClient {
     pub async fn new(pool: PgPool) -> Self {
-        let host = "mqtt://10.0.0.7:1883";
-        // let host = "mqtt://192.168.1.168:1883";
-
+        let host = "ws://localhost:8080";
         println!("Connecting to the MQTT broker at {}", host);
 
         let create_opts = mqtt::CreateOptionsBuilder::new_v3()
