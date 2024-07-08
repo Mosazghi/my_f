@@ -1,74 +1,61 @@
-import { Image, StyleSheet, Platform } from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import React, { useEffect } from "react";
+import { Header } from "@/components/Header";
+import { StyleSheet, StatusBar, View, Text, FlatList } from "react-native";
+import MqttUtils from "@/util/mqtt";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 export default function HomeScreen() {
+  StatusBar.setBarStyle("dark-content");
+  const connected = useSelector((state: RootState) => state.mqtt.connected);
+  const messages = useSelector((state: RootState) => state.mqtt.messages);
+
+  useEffect(() => {
+    MqttUtils.connect("ios", "rawScan");
+
+    return () => {
+      MqttUtils.disconnect();
+    };
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
+    <FlatList
+      style={styles.container}
+      ListHeaderComponent={
+        <>
+          <Header />
+          <Text style={{ color: connected ? "green" : "red" }}>
+            MQTT Connection Status: {connected ? "Connected" : "Disconnected"}
+          </Text>
+          <Text>Messages:</Text>
+        </>
       }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: "cmd + d", android: "cmd + m" })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this
-          starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{" "}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      data={messages}
+      keyExtractor={(item, index) => index.toString()}
+      renderItem={({ item }) => (
+        <View style={styles.messageContainer}>
+          <Text>
+            <Text style={styles.boldText}>Topic:</Text> {item.topic}
+          </Text>
+          <Text>
+            <Text style={styles.boldText}>Payload:</Text>{" "}
+            {JSON.stringify(item.payload)}
+          </Text>
+        </View>
+      )}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  messageContainer: {
+    marginVertical: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  boldText: {
+    fontWeight: "bold",
   },
 });
