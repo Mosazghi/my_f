@@ -14,7 +14,7 @@ void app_main(void) {
   queue = xQueueCreate(10, sizeof(scan_data_t));
 
   init();
-  mqtt_subscribe("rawScan");
+  mqtt_subscribe("newScan");
   mqtt_subscribe("scanResult");
 }
 

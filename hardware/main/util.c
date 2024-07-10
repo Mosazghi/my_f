@@ -17,7 +17,7 @@ int publish_data(exp_date_t exp_date, const char *code) {
   cJSON_AddStringToObject(data, "expDate", exp_date_str);
   char *json = cJSON_Print(data);
 
-  err = mqtt_publish("rawScan", json);
+  err = mqtt_publish("newScan", json);
 
   cJSON_free(json);
   cJSON_Delete(data);
