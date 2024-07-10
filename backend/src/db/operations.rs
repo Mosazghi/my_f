@@ -31,6 +31,19 @@ pub async fn get_refrigerator_item(pool: &PgPool, barcode: &str) -> Option<Refri
     item
 }
 
+pub async fn get_refrigerator_items(pool: &PgPool) -> Result<Vec<RefrigeratorItem>, sqlx::Error> {
+    let items = sqlx::query_as::<_, RefrigeratorItem>("SELECT * FROM refrigerator_items")
+        .fetch_all(pool)
+        .await;
+
+    println!("Items: {:?}", items);
+
+    match items {
+        Ok(items) => Ok(items),
+        Err(e) => Err(e),
+    }
+}
+
 pub async fn update_refrigerator_item_quantity(
     pool: &PgPool,
     barcode: &str,

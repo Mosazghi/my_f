@@ -12,6 +12,7 @@ pub struct RefrigeratorItem {
     pub expiration_date: NaiveDate,
     pub quantity: i32,
     pub nutrition: Json<Vec<Nutrition>>,
-    pub weight: String,
-    pub image_url: String,
+    pub created_at: Option<NaiveDate>,
+    pub weight: Option<String>,
+    pub image_url: Option<String>,
 }

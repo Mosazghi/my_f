@@ -2,19 +2,34 @@ use crate::db::{models::RefrigeratorItem, operations::insert_refrigerator_item};
 use crate::db::{operations::get_refrigerator_item, operations::update_refrigerator_item_quantity};
 pub mod types;
 use crate::util::parse_date;
+use crate::util::publish_json_response;
 use futures::stream::StreamExt;
 use paho_mqtt::{self as mqtt};
+use serde::Serialize;
 use sqlx::PgPool;
 use std::env;
 use std::{process, time::Duration};
-use types::{ApiResponse, MqttResponse, Product, RefrigeratorItemFromMqtt};
+use types::{ApiResponse, Product, RefrigeratorItemFromMqtt};
 
-const TOPIC: &str = "rawScan";
+const TOPIC_NEW_SCAN: &str = "newScan";
+const TOPIC_SCAN_RESULT: &str = "scanResult";
 const QOS: i32 = 1;
 
 pub struct MqttClient {
     pool: PgPool,
     client: mqtt::AsyncClient,
+}
+#[derive(Debug, Serialize)]
+enum ScanResultSuccess {
+    Success,
+    Updated,
+    Failure,
+}
+#[derive(Debug, Serialize)]
+struct ScanResult {
+    message: String,
+    success_type: ScanResultSuccess,
+    item: Option<RefrigeratorItem>,
 }
 
 impl MqttClient {
@@ -28,7 +43,7 @@ impl MqttClient {
             .finalize();
 
         let client = mqtt::AsyncClient::new(create_opts).unwrap_or_else(|e| {
-            println!("Error creating the client: {:?}", e);
+            eprintln!("Error creating the client: {:?}", e);
             process::exit(1);
         });
 
@@ -46,8 +61,8 @@ impl MqttClient {
 
             self.client.connect(conn_opts).await?;
 
-            self.client.subscribe(TOPIC, QOS).await?;
-            println!("Subscribed to topics: {:?}", TOPIC);
+            self.client.subscribe(TOPIC_NEW_SCAN, QOS).await?;
+            println!("Subscribed to topics: {:?}", TOPIC_NEW_SCAN);
 
             let mut rconn_attempt: usize = 0;
 
@@ -58,10 +73,10 @@ impl MqttClient {
                     println!("Received a message on topic '{}': {}\n", topic, payload);
                     self.handle_message(msg).await;
                 } else {
-                    println!("Lost connection. Attempting reconnect...");
+                    eprintln!("Lost connection. Attempting reconnect...");
                     while let Err(err) = self.client.reconnect().await {
                         rconn_attempt += 1;
-                        println!("Error reconnecting #{}: {}", rconn_attempt, err);
+                        eprintln!("Error reconnecting #{}: {}", rconn_attempt, err);
                         tokio::time::sleep(Duration::from_secs(1)).await;
                     }
                     println!("Reconnected.");
@@ -79,25 +94,36 @@ impl MqttClient {
     async fn handle_message(&self, msg: mqtt::Message) {
         let payload = msg.payload_str();
 
+        let mut scan_result = ScanResult {
+            message: "Error occured!".to_string(),
+            success_type: ScanResultSuccess::Failure,
+            item: None,
+        };
+
         let item_mqtt: RefrigeratorItemFromMqtt = match serde_json::from_str(&payload) {
             Ok(item) => item,
             Err(e) => {
-                println!("Failed to parse message payload: {:?}", e);
-                return;
+                eprintln!("Failed to parse message payload: {:?}", e);
+                scan_result.message = "Failed to parse message payload.".to_string();
+                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                return; // EXIT EARLY!!
             }
         };
 
         let item = get_refrigerator_item(&self.pool, &item_mqtt.barcode).await;
         match item {
             Some(mut item) => {
-                println!("Item already exists in the database.");
+                eprintln!("Item already exists in the database.");
                 let _ = update_refrigerator_item_quantity(&self.pool, &item_mqtt.barcode, {
                     item.quantity += 1;
                     item.quantity
                 })
                 .await;
-
-                return;
+                scan_result.message =
+                    "Item already exists in the database. Updated its quantity.".to_string();
+                scan_result.success_type = ScanResultSuccess::Updated;
+                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                return; // EXIT EARLY!!
             }
             None => (),
         }
@@ -105,16 +131,9 @@ impl MqttClient {
         let item_product = match self.fetch_product(&item_mqtt.barcode).await {
             Some(product) => product,
             None => {
-                let msg = MqttResponse {
-                    message: "Product not found!".to_string(),
-                };
-
-                let msg = serde_json::to_string(&msg).unwrap();
-                let msg = mqtt::Message::new("scanResult", msg, mqtt::QOS_1);
-                if let Err(e) = self.client.publish(msg).await {
-                    println!("Failed to publish message: {:?}", e);
-                }
-                return;
+                scan_result.message = "Product not found!".to_string();
+                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                return; // EXIT EARLY!!
             }
         };
 
@@ -123,38 +142,35 @@ impl MqttClient {
             expiration_date: parse_date(&item_mqtt.expiration_date),
             name: item_product.name,
             quantity: 1,
-            weight: String::from(
-                item_product.weight.unwrap_or(0.0).to_string()
-                    + &item_product.weight_unit.unwrap_or("g".to_string()),
-            ),
+            weight: match item_product.weight {
+                Some(weight) => {
+                    Some(weight.to_string() + &item_product.weight_unit.unwrap_or_default())
+                }
+                None => None,
+            },
             nutrition: sqlx::types::Json::from(item_product.nutrition.unwrap_or_default()),
-            image_url: item_product.image.unwrap_or_default(),
+            created_at: None, // The DB will handle the date
+            image_url: match item_product.image {
+                Some(image) => Some(image),
+                None => None,
+            },
         };
 
         let result = insert_refrigerator_item(&self.pool, &item).await;
         match result {
             Ok(_) => {
+                let item = get_refrigerator_item(&self.pool, &item.barcode)
+                    .await
+                    .unwrap();
+
                 println!("Inserted item from MQTT message successfully.");
-                let item_json = serde_json::to_string(&item).unwrap();
-
-                let msg = mqtt::Message::new("newScan", item_json, mqtt::QOS_1);
-                if let Err(e) = self.client.publish(msg).await {
-                    println!("Failed to publish message: {:?}", e);
-                }
-
-                let msg = MqttResponse {
-                    message: "Success!".to_string(),
-                };
-
-                let msg = serde_json::to_string(&msg).unwrap();
-
-                let msg = mqtt::Message::new("scanResult", msg, mqtt::QOS_1);
-                if let Err(e) = self.client.publish(msg).await {
-                    println!("Failed to publish message: {:?}", e);
-                }
-                return;
+                scan_result.message = "Item inserted successfully.".to_string();
+                scan_result.item = Some(item);
+                scan_result.success_type = ScanResultSuccess::Success;
+                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                return; // EXIT EARLY!!
             }
-            Err(e) => println!("Failed to insert item from MQTT message: {:?}", e),
+            Err(e) => eprintln!("Failed to insert item from MQTT message: {:?}", e),
         }
     }
 
@@ -194,7 +210,7 @@ impl MqttClient {
                 return Some(valid_product.unwrap());
             }
             Err(_) => {
-                println!("Product not found.");
+                eprintln!("Product not found.");
                 return None;
             }
         };

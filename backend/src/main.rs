@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use route::create_router;
 use std::env;
 
 pub mod db;
@@ -6,13 +6,20 @@ pub mod mqtt;
 pub mod server;
 pub mod util;
 
-use server::Server;
-use std::net::SocketAddr;
+use crate::server::*;
 
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio::task;
 
+use std::sync::Arc;
+
+use dotenv::dotenv;
+
 type Error = Box<dyn std::error::Error>;
+
+pub struct AppState {
+    db: PgPool,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -26,20 +33,19 @@ async fn main() -> Result<(), Error> {
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let mut mqtt_client = mqtt::MqttClient::new(pool.clone()).await;
 
-    let mut mqtt_client = mqtt::MqttClient::new(pool).await;
-
-    let mqtt_handle = task::spawn(async move {
+    task::spawn(async move {
         mqtt_client.start().await;
     });
 
-    let server = Server::new(addr);
-    let server_handle = task::spawn(async move {
-        server.start().await;
-    });
+    let app = create_router(Arc::new(AppState { db: pool.clone() }));
 
-    tokio::try_join!(mqtt_handle, server_handle)?;
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    println!("Listening on: http://{}", listener.local_addr().unwrap());
+
+    axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
