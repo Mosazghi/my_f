@@ -149,11 +149,11 @@ impl MqttClient {
                 None => None,
             },
             nutrition: sqlx::types::Json::from(item_product.nutrition.unwrap_or_default()),
-            created_at: None, // The DB will handle the date
             image_url: match item_product.image {
                 Some(image) => Some(image),
                 None => None,
             },
+            ..Default::default()
         };
 
         let result = insert_refrigerator_item(&self.pool, &item).await;

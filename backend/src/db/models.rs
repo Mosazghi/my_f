@@ -5,7 +5,7 @@ use sqlx::FromRow;
 
 use crate::mqtt::types::Nutrition;
 
-#[derive(Debug, FromRow, Serialize, Deserialize)]
+#[derive(Debug, FromRow, Serialize, Deserialize, Default)]
 pub struct RefrigeratorItem {
     pub barcode: String,
     pub name: String,

@@ -36,8 +36,6 @@ pub async fn get_refrigerator_items(pool: &PgPool) -> Result<Vec<RefrigeratorIte
         .fetch_all(pool)
         .await;
 
-    println!("Items: {:?}", items);
-
     match items {
         Ok(items) => Ok(items),
         Err(e) => Err(e),
