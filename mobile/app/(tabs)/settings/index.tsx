@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from "react-native";
 
-export default function TabTwoScreen() {
+export default function SettingsScreen() {
     return (
         <View>
             <Text>Hello World</Text>
