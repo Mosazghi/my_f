@@ -1,12 +1,10 @@
-// store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import mqttReducer from "./mqttSlice";
+import mqttReducer from "./mqtt";
 
 export const store = configureStore({
-  reducer: {
-    mqtt: mqttReducer,
-  },
+    reducer: {
+        mqtt: mqttReducer,
+    },
 });
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
