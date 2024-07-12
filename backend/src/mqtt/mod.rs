@@ -19,17 +19,18 @@ pub struct MqttClient {
     pool: PgPool,
     client: mqtt::AsyncClient,
 }
+
 #[derive(Debug, Serialize)]
-enum ScanResultSuccess {
+enum SuceessType {
     Success,
     Updated,
     Failure,
 }
+
 #[derive(Debug, Serialize)]
 struct ScanResult {
     message: String,
-    success_type: ScanResultSuccess,
-    item: Option<RefrigeratorItem>,
+    success_type: SuceessType,
 }
 
 impl MqttClient {
@@ -96,8 +97,7 @@ impl MqttClient {
 
         let mut scan_result = ScanResult {
             message: "Error occured!".to_string(),
-            success_type: ScanResultSuccess::Failure,
-            item: None,
+            success_type: SuceessType::Failure,
         };
 
         let item_mqtt: RefrigeratorItemFromMqtt = match serde_json::from_str(&payload) {
@@ -119,9 +119,8 @@ impl MqttClient {
                     item.quantity
                 })
                 .await;
-                scan_result.message =
-                    "Item already exists in the database. Updated its quantity.".to_string();
-                scan_result.success_type = ScanResultSuccess::Updated;
+                scan_result.message = format!("{} updated successfully.", item.name);
+                scan_result.success_type = SuceessType::Updated;
                 publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
                 return; // EXIT EARLY!!
             }
@@ -159,14 +158,9 @@ impl MqttClient {
         let result = insert_refrigerator_item(&self.pool, &item).await;
         match result {
             Ok(_) => {
-                let item = get_refrigerator_item(&self.pool, &item.barcode)
-                    .await
-                    .unwrap();
-
                 println!("Inserted item from MQTT message successfully.");
-                scan_result.message = "Item inserted successfully.".to_string();
-                scan_result.item = Some(item);
-                scan_result.success_type = ScanResultSuccess::Success;
+                scan_result.message = format!("{} inserted successfully.", item.name);
+                scan_result.success_type = SuceessType::Success;
                 publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
                 return; // EXIT EARLY!!
             }
