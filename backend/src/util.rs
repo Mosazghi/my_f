@@ -1,10 +1,11 @@
 use paho_mqtt::{self as mqtt};
 
-pub fn parse_date(date: &str) -> chrono::NaiveDate {
-    chrono::NaiveDate::parse_from_str(date, "%d/%m/%Y").unwrap_or_else(|e| {
-        println!("Failed to parse date: {:?}", e);
-        chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-    })
+pub fn parse_date(date: &str) -> Option<chrono::NaiveDate> {
+    if let Ok(parsed_date) = chrono::NaiveDate::parse_from_str(date, "%d/%m/%Y") {
+        return Some(parsed_date);
+    } else {
+        return None;
+    }
 }
 
 pub async fn publish_json_response<T: serde::Serialize>(

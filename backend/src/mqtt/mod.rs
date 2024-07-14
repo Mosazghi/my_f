@@ -1,5 +1,6 @@
+use crate::db::operations::{get_refrigerator_item, update_refrigerator_item};
+use crate::db::UpdateRefrigeratorItem;
 use crate::db::{models::RefrigeratorItem, operations::insert_refrigerator_item};
-use crate::db::{operations::get_refrigerator_item, operations::update_refrigerator_item_quantity};
 pub mod types;
 use crate::util::parse_date;
 use crate::util::publish_json_response;
@@ -110,18 +111,49 @@ impl MqttClient {
             }
         };
 
+        let parsed_date = match parse_date(&item_mqtt.expiration_date) {
+            Some(date) => date,
+            None => {
+                eprintln!(
+                    "Failed to parse expiration date: {:?}",
+                    item_mqtt.expiration_date
+                );
+                scan_result.message = format!(
+                    "Failed to parse expiration date:\n \'{}\'",
+                    item_mqtt.expiration_date
+                );
+
+                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                return; // EXIT EARLY!!
+            }
+        };
+
         let item = get_refrigerator_item(&self.pool, &item_mqtt.barcode).await;
         match item {
-            Some(mut item) => {
+            Some(item) => {
                 eprintln!("Item already exists in the database.");
-                let _ = update_refrigerator_item_quantity(&self.pool, &item_mqtt.barcode, {
-                    item.quantity += 1;
-                    item.quantity
-                })
-                .await;
-                scan_result.message = format!("{} updated successfully.", item.name);
-                scan_result.success_type = SuceessType::Updated;
-                publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                match update_refrigerator_item(
+                    &self.pool,
+                    &item_mqtt.barcode,
+                    &UpdateRefrigeratorItem {
+                        quantity: Some(0),
+                        ..Default::default()
+                    },
+                )
+                .await
+                {
+                    Ok(_) => {
+                        scan_result.message = format!("{} updated successfully.", item.name);
+                        scan_result.success_type = SuceessType::Updated;
+                        publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                    }
+                    _ => {
+                        scan_result.message = format!("Failed to update {}.", item.name);
+                        scan_result.success_type = SuceessType::Failure;
+                        publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
+                    }
+                }
+
                 return; // EXIT EARLY!!
             }
             None => (),
@@ -138,7 +170,7 @@ impl MqttClient {
 
         let item = RefrigeratorItem {
             barcode: item_mqtt.barcode,
-            expiration_date: parse_date(&item_mqtt.expiration_date),
+            expiration_date: parsed_date,
             name: item_product.name,
             quantity: 1,
             weight: match item_product.weight {

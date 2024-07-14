@@ -1,5 +1,15 @@
 use super::models::RefrigeratorItem;
-use sqlx::PgPool;
+use chrono::NaiveDate;
+use serde::Serialize;
+use sqlx::{postgres::PgQueryResult, PgPool};
+
+#[derive(Debug, Serialize, Default)]
+pub struct UpdateRefrigeratorItem {
+    pub name: Option<String>,
+    pub quantity: Option<i32>,
+    pub expiration_date: Option<NaiveDate>,
+    pub weight: Option<String>,
+}
 
 pub async fn insert_refrigerator_item(
     pool: &PgPool,
@@ -42,15 +52,18 @@ pub async fn get_refrigerator_items(pool: &PgPool) -> Result<Vec<RefrigeratorIte
     }
 }
 
-pub async fn update_refrigerator_item_quantity(
+pub async fn update_refrigerator_item(
     pool: &PgPool,
     barcode: &str,
-    quantity: i32,
-) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE refrigerator_items SET quantity = $1 WHERE barcode = $2")
-        .bind(quantity)
+    item: &UpdateRefrigeratorItem,
+) -> Result<PgQueryResult, sqlx::Error> {
+    let q = sqlx::query("UPDATE refrigerator_items SET name = COALESCE($1, name), quantity = COALESCE($2, quantity), expiration_date = COALESCE($3, expiration_date), weight = COALESCE($4, weight) WHERE barcode = $5")
+        .bind(&item.name)
+        .bind(&item.quantity)
+        .bind(&item.expiration_date)
+        .bind(&item.weight)
         .bind(barcode)
         .execute(pool)
         .await?;
-    Ok(())
+    Ok(q)
 }
