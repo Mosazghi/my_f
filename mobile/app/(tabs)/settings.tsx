@@ -1,10 +1,11 @@
-import { StyleSheet, View, Text } from "react-native";
+import { colors } from "@/constants/tokens";
+import { StyleSheet, View, Text, SafeAreaView } from "react-native";
 
 export default function SettingsScreen() {
     return (
-        <View>
-            <Text>Hello World</Text>
-        </View>
+        <SafeAreaView>
+            <Text style={styles.test}>Hello World</Text>
+        </SafeAreaView>
     );
 }
 
@@ -18,5 +19,8 @@ const styles = StyleSheet.create({
     titleContainer: {
         flexDirection: "row",
         gap: 8,
+    },
+    test: {
+        color: colors.textLight,
     },
 });

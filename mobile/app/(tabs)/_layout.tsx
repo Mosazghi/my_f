@@ -5,11 +5,12 @@ import { BlurView } from "expo-blur";
 import { StyleSheet } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import CustomHeader from "@/components/CustomHeader";
 export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                headerShown: false,
+                headerShown: true,
                 tabBarActiveTintColor: "white",
                 tabBarInactiveTintColor: "rgba(255, 255, 255, 0.7)",
                 tabBarLabelStyle: {
@@ -34,7 +35,7 @@ export default function TabLayout() {
             }}
         >
             <Tabs.Screen
-                name="(fridge)"
+                name="index"
                 options={{
                     title: "Fridge",
                     tabBarIcon: ({ color, focused }) => (
@@ -44,6 +45,8 @@ export default function TabLayout() {
                             color={color}
                         />
                     ),
+                    header: () => <CustomHeader />,
+                    headerTransparent: true,
                 }}
             />
             <Tabs.Screen
@@ -58,6 +61,8 @@ export default function TabLayout() {
                             color={color}
                         />
                     ),
+                    header: () => <CustomHeader showSearch={false} title="Settings" />,
+                    headerTransparent: true,
                 }}
             />
         </Tabs>

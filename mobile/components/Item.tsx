@@ -1,6 +1,7 @@
+import { colors } from "@/constants/tokens";
 import { RefrigeratorItem } from "@/redux/mqtt";
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, Button, StyleSheet, TouchableHighlight } from "react-native";
+import { TouchableOpacity, View, Text, Image, Button, StyleSheet } from "react-native";
 import Modal from "react-native-modal";
 
 export default function Item({
@@ -18,7 +19,7 @@ export default function Item({
 
     return (
         <>
-            <TouchableHighlight onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemHeader}>
                         <Image
@@ -29,16 +30,18 @@ export default function Item({
                             }
                             style={styles.image}
                         />
-                        <Text style={styles.itemName}>{name}</Text>
+                        <Text numberOfLines={2} style={styles.itemName}>
+                            {name}
+                        </Text>
                     </View>
                     <View style={styles.itemFooter}>
                         {weight && <Text style={styles.itemWeight}>{weight}</Text>}
-                        <Text style={{ color: isGood ? "green" : "red" }}>
+                        <Text style={{ color: isGood ? "green" : "tomato" }}>
                             {isGood ? "Good" : "Bad"}
                         </Text>
                     </View>
                 </View>
-            </TouchableHighlight>
+            </TouchableOpacity>
 
             <Modal style={styles.modal} isVisible={isModalVisible}>
                 <Text>Expiration date: {expirationDateObject.toDateString()}</Text>
@@ -51,15 +54,18 @@ export default function Item({
 const styles = StyleSheet.create({
     itemContainer: {
         padding: 10,
-        backgroundColor: "#f8f8f8",
+        borderWidth: 1,
         borderRadius: 5,
-        maxWidth: 300,
+        borderColor: colors.textMuted,
+        maxWidth: 190,
     },
+
     itemHeader: {
-        display: "flex",
         flexDirection: "row",
         alignItems: "flex-start",
         justifyContent: "space-between",
+        borderBottomWidth: 1,
+        borderColor: colors.textMuted,
         marginBottom: 10,
         gap: 10,
     },
@@ -68,10 +74,11 @@ const styles = StyleSheet.create({
         height: 70,
     },
     itemName: {
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: "condensed",
-        maxWidth: "50%",
+        width: 100,
     },
+
     itemFooter: {
         display: "flex",
         flexDirection: "row",
@@ -82,9 +89,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     modal: {
-        // display: "flex",
-        // justifyContent: "center",
-        // alignItems: "center",
         backgroundColor: "white",
         maxHeight: 200,
         padding: 20,

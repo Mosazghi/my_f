@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store } from "../redux/store";
 import { StatusBar } from "expo-status-bar";
 import { StackScreenWithSearchBar } from "@/constants/layout";
+import { SearchProvider } from "@/util/SearchContext";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -28,14 +29,13 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider value={colorScheme !== "dark" ? DarkTheme : DefaultTheme}>
-            <Provider store={store}>
-                <StatusBar style="auto" />
+        <Provider store={store}>
+            <SearchProvider>
+                <StatusBar style="dark" />
                 <Stack>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="+not-found" />
                 </Stack>
-            </Provider>
-        </ThemeProvider>
+            </SearchProvider>
+        </Provider>
     );
 }

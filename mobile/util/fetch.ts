@@ -6,17 +6,19 @@ type ApiResponse = {
     items: RefrigeratorItem[];
 };
 
-export async function fetchItems(): Promise<ApiResponse | undefined> {
+export async function fetchItems(): Promise<ApiResponse> {
     try {
         const response = await fetch("http://192.168.1.168:3000/api/items");
 
         if (!response.ok) {
-            throw new Error("Failed to fetch items");
+            console.log("Threw!");
+            throw new Error("Failed to fetch items: ");
         }
 
-        return response.json();
+        return await response.json();
     } catch (error) {
+        console.log("Caught!");
         console.error(error);
-        return undefined;
+        return {} as ApiResponse;
     }
 }

@@ -1,42 +1,34 @@
 import { FlatList, Text, View, StyleSheet } from "react-native";
 import Item from "./Item";
 import { RefrigeratorItem } from "@/redux/mqtt";
+import { colors } from "@/constants/tokens";
 
-import { utilsStyles } from "@/styles";
 interface ItemViewProps {
     title: string;
     data: RefrigeratorItem[];
+    searching?: boolean;
 }
 
-const ItemDivider = () => (
-    <View style={{ ...utilsStyles.itemSeparator, marginVertical: 9, marginLeft: 90 }} />
-);
-
-export default function ItemView({ data, title }: ItemViewProps) {
+export default function ItemView({ data, title, searching = false }: ItemViewProps) {
     return (
         <View>
             <Text style={styles.title}>{title}</Text>
 
             <FlatList
-                horizontal
+                horizontal={!searching}
                 showsHorizontalScrollIndicator={false}
-                ItemSeparatorComponent={ItemDivider}
+                contentContainerStyle={{ gap: 15, paddingVertical: 15 }}
                 data={data}
                 renderItem={({ item }) => <Item {...item} />}
-                keyExtractor={(item) => item.barcode.toString()}
-                style={styles.container}
+                keyExtractor={(item) => `${item.barcode}`} // FIXME: Should use barcode as key
             />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 5,
-    },
-
     title: {
-        color: "black",
+        color: colors.text,
         fontSize: 22,
         fontWeight: "500",
     },
