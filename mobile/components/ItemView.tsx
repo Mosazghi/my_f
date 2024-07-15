@@ -16,11 +16,11 @@ export default function ItemView({ data, title, searching = false }: ItemViewPro
 
             <FlatList
                 horizontal={!searching}
-                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 15, paddingVertical: 15 }}
                 data={data}
                 renderItem={({ item }) => <Item {...item} />}
-                keyExtractor={(item) => `${item.barcode}`} // FIXME: Should use barcode as key
+                keyExtractor={(item, idx) => `${idx}`}
+                scrollEnabled={!searching}
             />
         </View>
     );

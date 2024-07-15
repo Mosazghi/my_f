@@ -37,7 +37,7 @@ export default function Item({
                     <View style={styles.itemFooter}>
                         {weight && <Text style={styles.itemWeight}>{weight}</Text>}
                         <Text style={{ color: isGood ? "green" : "tomato" }}>
-                            {isGood ? "Good" : "Bad"}
+                            {isGood ? "Good" : "Expired"}
                         </Text>
                     </View>
                 </View>

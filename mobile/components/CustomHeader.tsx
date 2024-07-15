@@ -1,4 +1,4 @@
-import Colors from "../constants/Colors";
+import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,7 +6,11 @@ import { BlurView } from "expo-blur";
 import { ConnectionStatusBar } from "./ConnectionStatusBar";
 import { useContext } from "react";
 import { SearchContext } from "@/util/SearchContext";
+import * as Animatable from "react-native-animatable";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { useEffect } from "react";
 
+import { Keyboard } from "react-native";
 type CustomHeaderProps = {
     showSearch?: boolean;
     title?: string;
@@ -14,6 +18,11 @@ type CustomHeaderProps = {
 const CustomHeader = ({ showSearch = true, title = "My Fridge" }: CustomHeaderProps) => {
     const { top } = useSafeAreaInsets();
     const { search, setSearch } = useContext(SearchContext);
+
+    const handleClearSearch = () => {
+        setSearch("");
+        Keyboard.dismiss();
+    };
 
     return (
         <BlurView intensity={80} tint={"extraLight"} style={{ paddingTop: top }}>
@@ -37,10 +46,26 @@ const CustomHeader = ({ showSearch = true, title = "My Fridge" }: CustomHeaderPr
                         />
                         <TextInput
                             style={styles.input}
-                            placeholder="Search"
+                            placeholder="Search in your fridge..."
                             placeholderTextColor={Colors.dark}
-                            onChange={(e) => setSearch(e.nativeEvent.text)}
+                            value={search}
+                            onChangeText={(text) => setSearch(text)}
                         />
+
+                        {search.length > 0 && (
+                            <TouchableOpacity onPress={handleClearSearch}>
+                                <Animatable.View
+                                    animation={search.length > 0 ? "fadeIn" : "fadeOut"}
+                                    duration={1000}
+                                >
+                                    <FontAwesome6
+                                        name="x"
+                                        size={16}
+                                        style={styles.clear}
+                                    />
+                                </Animatable.View>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
                 <ConnectionStatusBar />
@@ -60,10 +85,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: Colors.dark,
     },
-    btn: {
-        padding: 10,
-        backgroundColor: Colors.gray,
-    },
     searchSection: {
         flex: 1,
         flexDirection: "row",
@@ -78,7 +99,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         paddingTop: 10,
-        paddingRight: 10,
+        paddingRight: 0,
         paddingBottom: 10,
         paddingLeft: 0,
         backgroundColor: Colors.lightGray,
@@ -92,6 +113,9 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.lightGray,
         justifyContent: "center",
         alignItems: "center",
+    },
+    clear: {
+        padding: 10,
     },
 });
 export default CustomHeader;
