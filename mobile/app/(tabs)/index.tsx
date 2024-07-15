@@ -20,7 +20,7 @@ export default function FridgeScreen() {
 
     const [items, setItems] = useState<RefrigeratorItem[]>([]);
     const [todaysItems, setTodayItems] = useState<RefrigeratorItem[]>([]);
-    const [badItems, setBadItems] = useState<RefrigeratorItem[]>([]);
+    const [expiredItems, setExpiredItems] = useState<RefrigeratorItem[]>([]);
 
     const [isNotifyVisible, setModalVisible] = useState(false);
     const headerHeight = useHeaderHeight();
@@ -65,7 +65,7 @@ export default function FridgeScreen() {
                 )
                     setTodayItems((prev) => [...prev, item]);
 
-                if (todayDate > itemDate) setBadItems((prev) => [...prev, item]);
+                if (todayDate > itemDate) setExpiredItems((prev) => [...prev, item]);
             });
         });
     }, [newScans]);
@@ -80,16 +80,22 @@ export default function FridgeScreen() {
                     paddingHorizontal: screenPadding.horizontal,
                 }}
             >
-                {search === "" ? (
+                {!search && (
                     <View>
-                        <ItemView title="Eat These" data={badItems} />
+                        <ItemView title="Eat These" data={expiredItems} />
                         {todaysItems.length > 0 && (
                             <ItemView title="Today's Items" data={todaysItems} />
                         )}
                         <ItemView title="All Items" data={items} />
                     </View>
-                ) : (
-                    <ItemView searching title="Search for..." data={filteredItems} />
+                )}
+
+                {search && (
+                    <ItemView
+                        title={`Searching for '${search}'`}
+                        data={filteredItems}
+                        searching={true}
+                    />
                 )}
             </ScrollView>
 
