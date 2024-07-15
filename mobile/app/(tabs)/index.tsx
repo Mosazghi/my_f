@@ -1,113 +1,131 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import MqttUtils from "@/util/mqtt";
+import {
+    TouchableOpacity,
+    StyleSheet,
+    View,
+    Text,
+    ScrollView,
+    TextInput,
+    ActivityIndicator,
+} from "react-native";
+import { useState } from "react";
+import { defaultStyles } from "@/styles";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { screenPadding } from "@/constants/tokens";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import ItemView from "@/components/ItemView";
-import { RefrigeratorItem } from "@/redux/mqtt";
-import { fetchItems } from "@/util/fetch";
-import Notify from "@/components/Notify";
-import { View } from "react-native";
-import { defaultStyles } from "@/styles";
-import { screenPadding } from "@/constants/tokens";
-import { SearchContext } from "@/util/SearchContext";
-import { useContext } from "react";
-import { useHeaderHeight } from "@react-navigation/elements";
+import Colors from "@/constants/Colors";
+import MqttUtils from "@/util/mqtt";
+import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 
-export default function FridgeScreen() {
-    const connected = useSelector((state: RootState) => state.mqtt.connected);
-    const newScans = useSelector((state: RootState) => state.mqtt.scanResultMessage);
+export default function SettingsScreen() {
+    const [host, setHost] = useState("192.168.1.168");
+    const [port, setPort] = useState("8080");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [items, setItems] = useState<RefrigeratorItem[]>([]);
-    const [todaysItems, setTodayItems] = useState<RefrigeratorItem[]>([]);
-    const [expiredItems, setExpiredItems] = useState<RefrigeratorItem[]>([]);
-
-    const [isNotifyVisible, setModalVisible] = useState(false);
     const headerHeight = useHeaderHeight();
-    const { search } = useContext(SearchContext);
+    const router = useRouter();
 
-    const filteredItems = useMemo(() => {
-        if (!search) return items;
+    const connected = useSelector((state: RootState) => state.mqtt.connected);
 
-        return items.filter((item) =>
-            (item.name + item.weight).toLowerCase().includes(search.toLowerCase())
-        );
-    }, [search]);
-
-    useEffect(() => {
+    const handleConnect = () => {
         if (!connected) {
-            MqttUtils.connect("client", "scanResult");
-        }
-
-        if (newScans !== undefined) {
-            setModalVisible(true);
+            setIsLoading(true);
             setTimeout(() => {
-                setModalVisible(false);
-            }, 2500);
+                MqttUtils.connect(host, Number(port), (error) => {
+                    if (error) {
+                        Toast.show({
+                            type: "error",
+                            text1: "Failed to connect. Check your settings.",
+                        });
+                    } else {
+                        router.push("/fridge");
+                    }
+                });
+
+                setIsLoading(false);
+            }, 1000);
         }
+    };
 
-        fetchItems().then((data) => {
-            console.info("Fetching items");
-            if (data.success === false) {
-                console.error("Failed to fetch items");
-                return;
+    const handleDisconnect = () => {
+        if (connected) {
+            try {
+                MqttUtils.disconnect();
+            } catch (error) {
+                console.error("Failed to disconnect", error);
             }
-            setItems(data!.items);
-
-            data!.items.filter((item: RefrigeratorItem) => {
-                const todayDate = new Date();
-                const itemDate = new Date(item.expiration_date); // WARNING: Debug purposes only
-
-                if (
-                    todayDate.getDate() === itemDate.getDate() &&
-                    todayDate.getMonth() === itemDate.getMonth() &&
-                    todayDate.getFullYear() === itemDate.getFullYear()
-                )
-                    setTodayItems((prev) => [...prev, item]);
-
-                if (todayDate > itemDate) setExpiredItems((prev) => [...prev, item]);
-            });
-        });
-    }, [newScans]);
+        }
+    };
 
     return (
         <View style={defaultStyles.container}>
             <ScrollView
-                contentInsetAdjustmentBehavior="automatic"
-                contentContainerStyle={{ paddingTop: headerHeight, paddingBottom: 128 }}
-                style={{
-                    ...styles.itemViewContainer,
+                contentContainerStyle={{
+                    paddingTop: headerHeight,
+                    paddingBottom: 128,
                     paddingHorizontal: screenPadding.horizontal,
                 }}
+                scrollEnabled={false}
             >
-                {!search && (
-                    <View>
-                        <ItemView title="Eat These" data={expiredItems} />
-                        {todaysItems.length > 0 && (
-                            <ItemView title="Today's Items" data={todaysItems} />
-                        )}
-                        <ItemView title="All Items" data={items} />
-                    </View>
-                )}
-
-                {search && (
-                    <ItemView
-                        title={`Searching for '${search}'`}
-                        data={filteredItems}
-                        searching={true}
+                <View style={styles.inputContainer}>
+                    <Text>Host:</Text>
+                    <TextInput
+                        value={host}
+                        onChangeText={setHost}
+                        placeholder="Host"
+                        style={styles.input}
                     />
-                )}
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text>Port:</Text>
+                    <TextInput
+                        value={port}
+                        onChangeText={setPort}
+                        keyboardType="numeric"
+                        style={styles.input}
+                    />
+                </View>
+                <TouchableOpacity
+                    onPress={connected ? handleDisconnect : handleConnect}
+                    style={{
+                        ...styles.submitButton,
+                        backgroundColor: connected ? "red" : "green",
+                    }}
+                >
+                    <Text style={{ color: "white" }}>
+                        {isLoading ? (
+                            <ActivityIndicator
+                                size="small"
+                                color="white"
+                                animating={isLoading}
+                            />
+                        ) : connected ? (
+                            "Disconnect"
+                        ) : (
+                            "Connect"
+                        )}
+                    </Text>
+                </TouchableOpacity>
             </ScrollView>
-
-            <Notify
-                isVisible={isNotifyVisible}
-                title={newScans?.success_type}
-                message={newScans?.message}
-            />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    itemViewContainer: {},
+    inputContainer: {
+        paddingVertical: 10,
+    },
+    input: {
+        paddingVertical: 5,
+        paddingLeft: 10,
+        backgroundColor: Colors.lightGray,
+        color: Colors.dark,
+        borderRadius: 5,
+    },
+    submitButton: {
+        padding: 10,
+        alignItems: "center",
+        borderRadius: 5,
+    },
 });
