@@ -24,8 +24,8 @@ pub struct MqttClient {
 #[derive(Debug, Serialize)]
 enum SuceessType {
     Success,
-    Updated,
-    Failure,
+    Info,
+    Error,
 }
 
 #[derive(Debug, Serialize)]
@@ -98,7 +98,7 @@ impl MqttClient {
 
         let mut scan_result = ScanResult {
             message: "Error occured!".to_string(),
-            success_type: SuceessType::Failure,
+            success_type: SuceessType::Error,
         };
 
         let item_mqtt: RefrigeratorItemFromMqtt = match serde_json::from_str(&payload) {
@@ -119,7 +119,7 @@ impl MqttClient {
                     item_mqtt.expiration_date
                 );
                 scan_result.message = format!(
-                    "Failed to parse expiration date:\n \'{}\'",
+                    "Failed to parse expiration date:\n\'{}\'",
                     item_mqtt.expiration_date
                 );
 
@@ -144,12 +144,12 @@ impl MqttClient {
                 {
                     Ok(_) => {
                         scan_result.message = format!("{} updated successfully.", item.name);
-                        scan_result.success_type = SuceessType::Updated;
+                        scan_result.success_type = SuceessType::Info;
                         publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
                     }
                     _ => {
                         scan_result.message = format!("Failed to update {}.", item.name);
-                        scan_result.success_type = SuceessType::Failure;
+                        scan_result.success_type = SuceessType::Error;
                         publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
                     }
                 }
@@ -191,7 +191,7 @@ impl MqttClient {
         match result {
             Ok(_) => {
                 println!("Inserted item from MQTT message successfully.");
-                scan_result.message = format!("{} inserted successfully.", item.name);
+                scan_result.message = format!("New item inserted successfully:\n{}", item.name);
                 scan_result.success_type = SuceessType::Success;
                 publish_json_response(&self.client, TOPIC_SCAN_RESULT, scan_result).await;
                 return; // EXIT EARLY!!
