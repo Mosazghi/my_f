@@ -5,7 +5,7 @@ import { RootState } from "@/redux/store";
 import ItemView from "@/components/ItemView";
 import { MqttSuccessType, RefrigeratorItem } from "@/redux/mqtt";
 import { fetchItems } from "@/util/fetch";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { defaultStyles } from "@/styles";
 import { screenPadding } from "@/constants/tokens";
 import { SearchContext } from "@/util/SearchContext";
@@ -15,6 +15,7 @@ import Toast from "react-native-toast-message";
 
 export default function FridgeScreen() {
     const newScans = useSelector((state: RootState) => state.mqtt.scanResultMessage);
+    const mqttConnected = useSelector((state: RootState) => state.mqtt.connected);
 
     const [items, setItems] = useState<RefrigeratorItem[]>([]);
     const [todaysItems, setTodaysItems] = useState<RefrigeratorItem[]>([]);
@@ -92,30 +93,28 @@ export default function FridgeScreen() {
                     paddingHorizontal: screenPadding.horizontal,
                 }}
             >
-                {!search && (
-                    <View>
-                        <ItemView title="Eat These" data={expiredItems} />
-                        {todaysItems.length > 0 && (
-                            <ItemView title="Today's Items" data={todaysItems} />
+                {mqttConnected ? (
+                    <>
+                        {search === "" ? (
+                            <View>
+                                <ItemView title="Eat These" data={expiredItems} />
+                                {todaysItems.length > 0 && (
+                                    <ItemView title="Today's Items" data={todaysItems} />
+                                )}
+                                <ItemView title="All Items" data={items} />
+                            </View>
+                        ) : (
+                            <ItemView
+                                title={`Searching for '${search}'`}
+                                data={filteredItems}
+                                searching={true}
+                            />
                         )}
-                        <ItemView title="All Items" data={items} />
-                    </View>
-                )}
-
-                {search && (
-                    <ItemView
-                        title={`Searching for '${search}'`}
-                        data={filteredItems}
-                        searching={true}
-                    />
+                    </>
+                ) : (
+                    <Text style={defaultStyles.text}>Connect to MQTT first...</Text>
                 )}
             </ScrollView>
-
-            {/* <Notify */}
-            {/*     isVisible={newScans !== undefined} */}
-            {/*     type={newScans?.success_type} */}
-            {/*     message={newScans?.message} */}
-            {/* /> */}
         </View>
     );
 }
