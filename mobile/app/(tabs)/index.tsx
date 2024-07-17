@@ -31,7 +31,7 @@ export default function SettingsScreen() {
     const handleConnect = () => {
         if (!connected) {
             setIsLoading(true);
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 MqttUtils.connect(host, Number(port), (error) => {
                     if (error) {
                         Toast.show({
@@ -39,6 +39,7 @@ export default function SettingsScreen() {
                             text1: "Failed to connect. Check your settings.",
                         });
                     } else {
+                        clearTimeout(timer);
                         router.push("/fridge");
                     }
                 });

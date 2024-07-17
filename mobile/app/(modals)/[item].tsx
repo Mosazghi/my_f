@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
-    Image,
     ScrollView,
     StyleSheet,
     TextInput,
@@ -12,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { RefrigeratorItem } from "@/redux/mqtt";
 import { StatusBar } from "expo-status-bar";
-import { colors } from "@/constants/tokens";
+import { Image } from "expo-image";
 
 const EditItem = () => {
     const { item } = useLocalSearchParams<{ item: string }>();
@@ -22,7 +21,7 @@ const EditItem = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(parsedItem.name);
     const [expirationDate, setExpirationDate] = useState(
-        new Date(parsedItem.expiration_date).toLocaleDateString()
+        new Date(parsedItem.expiration_date)
     );
     const [quantity, setQuantity] = useState(parsedItem.quantity.toString());
     const [weight, setWeight] = useState(parsedItem.weight || "");
@@ -45,7 +44,12 @@ const EditItem = () => {
             <StatusBar style={"light"} />
             <ScrollView contentContainerStyle={styles.container}>
                 {parsedItem.image_url && (
-                    <Image source={{ uri: parsedItem.image_url }} style={styles.image} />
+                    <Image
+                        source={{ uri: parsedItem.image_url }}
+                        style={styles.image}
+                        contentFit="cover"
+                        transition={1000}
+                    />
                 )}
                 <View style={styles.infoContainer}>
                     <Text style={styles.title}>Edit Item</Text>
@@ -61,11 +65,16 @@ const EditItem = () => {
                         />
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Expiration Date</Text>
+                        <Text style={styles.label}>
+                            Expiration Date{" "}
+                            <Text style={{ color: "gray", fontStyle: "italic" }}>
+                                {expirationDate > new Date() ? "(Good)" : "(Expired)"}
+                            </Text>
+                        </Text>
                         <TextInput
                             style={{ ...styles.input, borderWidth: isEditing ? 1 : 0 }}
-                            value={expirationDate}
-                            onChangeText={setExpirationDate}
+                            value={expirationDate.toLocaleDateString()}
+                            onChangeText={setExpirationDate.toString}
                             editable={isEditing}
                             placeholder="Expiration Date"
                         />
@@ -145,7 +154,7 @@ const styles = StyleSheet.create({
     image: {
         width: 200,
         height: 200,
-        borderRadius: 10,
+        borderRadius: 5,
         marginBottom: 20,
     },
     infoContainer: {

@@ -22,6 +22,8 @@ export default function Item({
                             : require("../assets/images/react-logo.png")
                     }
                     style={styles.image}
+                    contentFit="cover"
+                    transition={1000}
                 />
                 <Text numberOfLines={2} style={styles.itemName}>
                     {name}
@@ -58,7 +60,10 @@ const styles = StyleSheet.create({
     image: {
         width: 70,
         height: 70,
+        backgroundColor: "#0553",
+        borderRadius: 20,
     },
+
     itemName: {
         fontSize: 13,
         fontWeight: "condensed",
