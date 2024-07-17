@@ -49,7 +49,7 @@ export default function FridgeScreen() {
                 type: newScans.success_type.toString().toLowerCase(),
 
                 text1: title || newScans.message,
-                text2: info,
+                text2: info || "",
             });
         }
 

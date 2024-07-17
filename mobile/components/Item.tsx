@@ -1,53 +1,39 @@
 import { colors } from "@/constants/tokens";
 import { RefrigeratorItem } from "@/redux/mqtt";
-import React, { useState, useEffect } from "react";
-import { TouchableOpacity, View, Text, Image, Button, StyleSheet } from "react-native";
-import Modal from "react-native-modal";
+import { View, Text, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 
 export default function Item({
     image_url,
     name,
     expiration_date,
-    nutrition,
     weight,
-    created_at,
 }: RefrigeratorItem) {
-    const [isModalVisible, setModalVisible] = useState(false);
-
     const expirationDateObject = new Date(expiration_date);
     const isGood = expirationDateObject > new Date();
 
     return (
-        <>
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
-                <View style={styles.itemContainer}>
-                    <View style={styles.itemHeader}>
-                        <Image
-                            source={
-                                image_url
-                                    ? { uri: image_url }
-                                    : require("../assets/images/react-logo.png")
-                            }
-                            style={styles.image}
-                        />
-                        <Text numberOfLines={2} style={styles.itemName}>
-                            {name}
-                        </Text>
-                    </View>
-                    <View style={styles.itemFooter}>
-                        {weight && <Text style={styles.itemWeight}>{weight}</Text>}
-                        <Text style={{ color: isGood ? "green" : "tomato" }}>
-                            {isGood ? "Good" : "Expired"}
-                        </Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-
-            <Modal style={styles.modal} isVisible={isModalVisible}>
-                <Text>Expiration date: {expirationDateObject.toDateString()}</Text>
-                <Button title="Close" onPress={() => setModalVisible(false)} />
-            </Modal>
-        </>
+        <View style={styles.itemContainer}>
+            <View style={styles.itemHeader}>
+                <Image
+                    source={
+                        image_url
+                            ? { uri: image_url }
+                            : require("../assets/images/react-logo.png")
+                    }
+                    style={styles.image}
+                />
+                <Text numberOfLines={2} style={styles.itemName}>
+                    {name}
+                </Text>
+            </View>
+            <View style={styles.itemFooter}>
+                {weight && <Text style={styles.itemWeight}>{weight}</Text>}
+                <Text style={{ color: isGood ? "green" : "tomato" }}>
+                    {isGood ? "Good" : "Expired"}
+                </Text>
+            </View>
+        </View>
     );
 }
 

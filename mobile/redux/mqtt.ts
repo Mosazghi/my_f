@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type Nutrition = {
-    name: string;
+    display_name: string;
     amount: number;
     unit: string;
 };
@@ -11,7 +11,7 @@ export interface RefrigeratorItem {
     name: string;
     expiration_date: Date;
     quantity: number;
-    nutrition?: Nutrition[];
+    nutrition: Nutrition[];
     weight?: string;
     created_at: Date;
     image_url?: string;

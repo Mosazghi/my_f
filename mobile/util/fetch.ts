@@ -11,13 +11,11 @@ export async function fetchItems(): Promise<ApiResponse> {
         const response = await fetch("http://192.168.1.168:3000/api/items");
 
         if (!response.ok) {
-            console.log("Threw!");
             throw new Error("Failed to fetch items: ");
         }
 
         return await response.json();
     } catch (error) {
-        console.log("Caught!");
         console.error(error);
         return {} as ApiResponse;
     }
