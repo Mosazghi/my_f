@@ -136,7 +136,7 @@ impl MqttClient {
                     &self.pool,
                     &item_mqtt.barcode,
                     &UpdateRefrigeratorItem {
-                        quantity: Some(0),
+                        quantity: Some(item.quantity + 1),
                         ..Default::default()
                     },
                 )
