@@ -12,7 +12,7 @@ export default function TabLayout() {
             screenOptions={{
                 headerShown: true,
                 tabBarActiveTintColor: "white",
-                tabBarInactiveTintColor: "rgba(255, 255, 255, 0.7)",
+                tabBarInactiveTintColor: "rgba(255, 255, 255, 0.9)",
                 tabBarLabelStyle: {
                     fontSize: fontSize.xs,
                     fontWeight: "500",

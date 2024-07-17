@@ -40,11 +40,9 @@ export default function FridgeScreen() {
                 newScans.success_type === MqttSuccessType.Success ||
                 newScans.success_type === MqttSuccessType.Error
             ) {
-                title = newScans.message.split("\n")[0];
-                info = newScans.message.split("\n")[1];
-                console.info("Title", title);
-                console.info("Info", info);
+                [title, info] = newScans.message.split("\n");
             }
+
             Toast.show({
                 type: newScans.success_type.toString().toLowerCase(),
 
