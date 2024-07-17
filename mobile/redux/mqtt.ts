@@ -18,9 +18,9 @@ export interface RefrigeratorItem {
 }
 
 export enum MqttSuccessType {
-    Success,
-    Error,
-    Info,
+    Success = "Success",
+    Error = "Error",
+    Info = "Info",
 }
 
 export interface NewScanMessage {
