@@ -1,12 +1,21 @@
-use crate::{db::get_refrigerator_items, AppState};
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use crate::{
+    db::{
+        delete_refrigerator_item, get_refrigerator_items, models::RefrigeratorItem,
+        update_refrigerator_item,
+    },
+    AppState,
+};
+use axum::{
+    debug_handler,
+    extract::{Json, Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::db::models::RefrigeratorItem;
-
-use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ResponseError {
+pub struct Response {
     success: bool,
     message: String,
     items: Option<Vec<RefrigeratorItem>>,
@@ -14,8 +23,8 @@ pub struct ResponseError {
 
 pub async fn get_items(
     State(data): State<Arc<AppState>>,
-) -> Result<impl IntoResponse, (StatusCode, Json<ResponseError>)> {
-    let mut response = ResponseError {
+) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    let mut response = Response {
         success: false,
         message: "Your refrigerator is empty.".to_string(),
         items: None,
@@ -25,7 +34,7 @@ pub async fn get_items(
 
     match get_refrigerator_items(&data.db).await {
         Ok(items) => {
-            response = ResponseError {
+            response = Response {
                 success: true,
                 message: "Items retrieved successfully.".to_string(),
                 items: Some(items),
@@ -35,5 +44,68 @@ pub async fn get_items(
         }
 
         Err(_) => Err((StatusCode::NOT_FOUND, Json(response))),
+    }
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct UpdateRefrigeratorItem {
+    pub name: Option<String>,
+    pub quantity: Option<i32>,
+    pub expiration_date: Option<String>,
+    pub weight: Option<String>,
+}
+
+#[debug_handler]
+pub async fn update_item(
+    Path(barcode): Path<String>,
+    State(data): State<Arc<AppState>>,
+    Json(input): Json<UpdateRefrigeratorItem>,
+) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    match update_refrigerator_item(&data.db, &barcode, &UpdateRefrigeratorItem { ..input }).await {
+        Ok(_) => {
+            println!("Item updated successfully.");
+
+            Ok((
+                StatusCode::OK,
+                Json(Response {
+                    success: true,
+                    message: "Item updated successfully.".to_string(),
+                    items: None,
+                }),
+            ))
+        }
+        Err(_) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(Response {
+                success: false,
+                message: "Failed to update item.".to_string(),
+                items: None,
+            }),
+        )),
+    }
+}
+
+pub async fn delete_item(
+    Path(barcode): Path<String>,
+    State(data): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    match delete_refrigerator_item(&data.db, &barcode).await {
+        Ok(_) => Ok((
+            StatusCode::OK,
+            Json(Response {
+                success: true,
+                message: "Item deleted successfully.".to_string(),
+                items: None,
+            }),
+        )),
+
+        Err(_) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(Response {
+                success: false,
+                message: "Failed to delete item.".to_string(),
+                items: None,
+            }),
+        )),
     }
 }

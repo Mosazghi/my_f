@@ -1,7 +1,6 @@
 use crate::db::operations::{get_refrigerator_item, update_refrigerator_item};
-use crate::db::UpdateRefrigeratorItem;
 use crate::db::{models::RefrigeratorItem, operations::insert_refrigerator_item};
-pub mod types;
+use crate::server::handlers::UpdateRefrigeratorItem;
 use crate::util::parse_date;
 use crate::util::publish_json_response;
 use futures::stream::StreamExt;
@@ -12,6 +11,7 @@ use std::env;
 use std::{process, time::Duration};
 use types::{ApiResponse, Product, RefrigeratorItemFromMqtt};
 
+pub mod types;
 const TOPIC_NEW_SCAN: &str = "newScan";
 const TOPIC_SCAN_RESULT: &str = "scanResult";
 const QOS: i32 = 1;
