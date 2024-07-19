@@ -1,5 +1,6 @@
 use super::models::RefrigeratorItem;
 use crate::{server::handlers::UpdateRefrigeratorItem, util::parse_date};
+use chrono::NaiveDate;
 use sqlx::{postgres::PgQueryResult, PgPool};
 
 pub async fn insert_refrigerator_item(
@@ -47,10 +48,17 @@ pub async fn update_refrigerator_item(
     pool: &PgPool,
     barcode: &str,
     item: &UpdateRefrigeratorItem,
-) -> Result<PgQueryResult, sqlx::Error> {
-    let parsed_date = item.expiration_date.as_ref().map(|date| parse_date(date));
+) -> Result<(), sqlx::Error> {
+    let mut parsed_date: Option<Option<NaiveDate>> = None; // FIXME: A bit ugly.
+    if item.expiration_date.is_some() {
+        parsed_date = item.expiration_date.as_ref().map(|date| parse_date(date));
 
-    let q = sqlx::query("UPDATE refrigerator_items SET name = COALESCE($1, name), quantity = COALESCE($2, quantity), expiration_date = COALESCE($3, expiration_date), weight = COALESCE($4, weight) WHERE barcode = $5")
+        if parsed_date.unwrap().is_none() {
+            return Err(sqlx::Error::RowNotFound);
+        }
+    }
+
+    sqlx::query("UPDATE refrigerator_items SET name = COALESCE($1, name), quantity = COALESCE($2, quantity), expiration_date = COALESCE($3, expiration_date), weight = COALESCE($4, weight) WHERE barcode = $5")
         .bind(&item.name)
         .bind(&item.quantity)
         .bind(&parsed_date)
@@ -58,7 +66,8 @@ pub async fn update_refrigerator_item(
         .bind(barcode)
         .execute(pool)
         .await?;
-    Ok(q)
+
+    Ok(())
 }
 
 pub async fn delete_refrigerator_item(pool: &PgPool, barcode: &str) -> Result<(), sqlx::Error> {

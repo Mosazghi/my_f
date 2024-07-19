@@ -55,7 +55,6 @@ pub struct UpdateRefrigeratorItem {
     pub weight: Option<String>,
 }
 
-#[debug_handler]
 pub async fn update_item(
     Path(barcode): Path<String>,
     State(data): State<Arc<AppState>>,
@@ -74,14 +73,18 @@ pub async fn update_item(
                 }),
             ))
         }
-        Err(_) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(Response {
-                success: false,
-                message: "Failed to update item.".to_string(),
-                items: None,
-            }),
-        )),
+        Err(_) => {
+            println!("Failed to update item.");
+
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(Response {
+                    success: false,
+                    message: "Failed to update item.".to_string(),
+                    items: None,
+                }),
+            ))
+        }
     }
 }
 
