@@ -8,7 +8,6 @@ import { useContext } from "react";
 import { SearchContext } from "@/util/SearchContext";
 import * as Animatable from "react-native-animatable";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { useEffect } from "react";
 
 import { Keyboard } from "react-native";
 type CustomHeaderProps = {

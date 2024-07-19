@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import * as Animatable from "react-native-animatable";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { Link } from "expo-router";
 
 export function ConnectionStatusBar() {
     const [isVisible, setIsVisible] = useState<boolean>(false);

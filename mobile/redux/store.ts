@@ -1,11 +1,13 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import mqttReducer from "./mqtt";
+import itemsReducer from "./items";
 
-const Store = configureStore({
-    reducer: {
-        mqtt: mqttReducer,
-    },
+const rootReducer = combineReducers({
+    mqtt: mqttReducer,
+    items: itemsReducer,
 });
+
+const Store = configureStore({ reducer: rootReducer });
 
 export type RootState = ReturnType<typeof Store.getState>;
 

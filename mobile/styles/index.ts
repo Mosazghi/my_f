@@ -1,5 +1,6 @@
 import { colors, fontSize } from "@/constants/tokens";
 import { StyleSheet } from "react-native";
+
 export const defaultStyles = StyleSheet.create({
     container: {
         flex: 1,
@@ -20,10 +21,5 @@ export const utilsStyles = StyleSheet.create({
     slider: {
         height: 7,
         borderRadius: 16,
-    },
-    itemSeparator: {
-        // borderColor: colors.textMuted,
-        // borderWidth: StyleSheet.hairlineWidth,
-        // opacity: 0.3,
     },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
@@ -9,9 +9,11 @@ import {
     Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { RefrigeratorItem } from "@/redux/mqtt";
+import { RefrigeratorItem } from "@/interfaces";
 import { StatusBar } from "expo-status-bar";
 import { Image } from "expo-image";
+import Toast from "react-native-toast-message";
+import { deleteItem, fetchItems, updateItem } from "@/util/fetch";
 
 const EditItem = () => {
     const { item } = useLocalSearchParams<{ item: string }>();
@@ -21,28 +23,63 @@ const EditItem = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(parsedItem.name);
     const [expirationDate, setExpirationDate] = useState(
-        new Date(parsedItem.expiration_date)
+        new Date(parsedItem.expiration_date).toLocaleDateString()
     );
     const [quantity, setQuantity] = useState(parsedItem.quantity.toString());
     const [weight, setWeight] = useState(parsedItem.weight || "");
 
     const handleSave = () => {
-        console.log("Save item:", { name, expirationDate, quantity, weight });
-        Alert.alert("Item saved successfully");
+        const noChangesMade =
+            name === parsedItem.name &&
+            expirationDate ===
+                new Date(parsedItem.expiration_date).toLocaleDateString() &&
+            quantity === parsedItem.quantity.toString() &&
+            weight === parsedItem.weight;
+
+        if (!noChangesMade) {
+            (async () => {
+                updateItem(parsedItem.barcode, {
+                    name,
+                    expiration_date: expirationDate,
+                    quantity: parseInt(quantity),
+                    weight,
+                }).then(() => fetchItems());
+            })();
+        } else {
+            Toast.show({
+                type: "info",
+                text1: "No were changes made. Aborting save.",
+            });
+        }
+
         setIsEditing(false);
         router.back();
     };
 
     const handleDelete = () => {
-        console.log("Delete item:", parsedItem);
-        Alert.alert("Item deleted successfully");
-        router.back();
+        const confirmDelete = async () => {
+            deleteItem(parsedItem.barcode).then(() => fetchItems());
+            router.back();
+        };
+
+        Alert.alert(
+            "Confirm Delete",
+            "Are you sure you want to delete this item?",
+            [
+                { text: "OK", onPress: confirmDelete },
+                { text: "Dismiss", onPress: () => {} },
+            ],
+            { cancelable: true }
+        );
     };
 
     return (
         <>
             <StatusBar style={"light"} />
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView
+                contentContainerStyle={styles.container}
+                automaticallyAdjustKeyboardInsets={true}
+            >
                 {parsedItem.image_url && (
                     <Image
                         source={{ uri: parsedItem.image_url }}
@@ -68,13 +105,15 @@ const EditItem = () => {
                         <Text style={styles.label}>
                             Expiration Date{" "}
                             <Text style={{ color: "gray", fontStyle: "italic" }}>
-                                {expirationDate > new Date() ? "(Good)" : "(Expired)"}
+                                {expirationDate > new Date().toLocaleDateString()
+                                    ? "(Good)"
+                                    : "(Expired)"}
                             </Text>
                         </Text>
                         <TextInput
                             style={{ ...styles.input, borderWidth: isEditing ? 1 : 0 }}
-                            value={expirationDate.toLocaleDateString()}
-                            onChangeText={setExpirationDate.toString}
+                            value={expirationDate}
+                            onChangeText={setExpirationDate}
                             editable={isEditing}
                             placeholder="Expiration Date"
                         />
@@ -90,24 +129,19 @@ const EditItem = () => {
                             keyboardType="number-pad"
                         />
                     </View>
-                    {parsedItem.weight !== null && (
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Weight</Text>
-                            <TextInput
-                                style={{
-                                    ...styles.input,
-                                    borderWidth: isEditing ? 1 : 0,
-                                }}
-                                value={weight}
-                                onChangeText={setWeight}
-                                editable={isEditing}
-                                placeholder="Weight"
-                            />
-                        </View>
-                    )}
-                    <Text style={styles.label}>
-                        Barcode: <Text style={styles.value}>{parsedItem.barcode}</Text>
-                    </Text>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Weight</Text>
+                        <TextInput
+                            style={{
+                                ...styles.input,
+                                borderWidth: isEditing ? 1 : 0,
+                            }}
+                            value={weight}
+                            onChangeText={setWeight}
+                            editable={isEditing}
+                            placeholder="Weight"
+                        />
+                    </View>
                     {parsedItem.nutrition.length > 0 && (
                         <>
                             <Text style={styles.subtitle}>Nutrition Information:</Text>
@@ -124,11 +158,15 @@ const EditItem = () => {
                             ))}
                         </>
                     )}
-                    <Text style={styles.label}>
+                    <Text style={{ ...styles.label, marginTop: 20 }}>
                         Created At:{" "}
                         <Text style={styles.value}>
                             {new Date(parsedItem.created_at).toLocaleDateString()}
                         </Text>
+                    </Text>
+
+                    <Text style={{ ...styles.label, width: "100%" }}>
+                        Barcode: <Text style={styles.value}>{parsedItem.barcode}</Text>
                     </Text>
                     <View style={styles.buttonContainer}>
                         {isEditing ? (
@@ -139,6 +177,7 @@ const EditItem = () => {
                         <Button title="Delete" onPress={handleDelete} color="red" />
                     </View>
                 </View>
+                <View style={{ height: 5 }} />
             </ScrollView>
         </>
     );

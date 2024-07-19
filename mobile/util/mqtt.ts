@@ -1,7 +1,8 @@
 import init from "react_native_mqtt";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Store from "@/redux/store";
-import { setConnected, addMessage, NewScanMessage } from "../redux/mqtt";
+import { setConnected, addMessage } from "@/redux/mqtt";
+import { NewScanMessage } from "@/interfaces";
 
 // Init the mqtt client
 init({

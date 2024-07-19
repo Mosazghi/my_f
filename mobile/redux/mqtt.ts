@@ -1,32 +1,7 @@
+import { NewScanMessage } from "@/interfaces";
+import { MqttSuccessType } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-type Nutrition = {
-    display_name: string;
-    amount: number;
-    unit: string;
-};
-
-export interface RefrigeratorItem {
-    barcode: string;
-    name: string;
-    expiration_date: Date;
-    quantity: number;
-    nutrition: Nutrition[];
-    weight?: string;
-    created_at: Date;
-    image_url?: string;
-}
-
-export enum MqttSuccessType {
-    Success = "Success",
-    Error = "Error",
-    Info = "Info",
-}
-
-export interface NewScanMessage {
-    message: string;
-    success_type: MqttSuccessType;
-}
+import Toast from "react-native-toast-message";
 
 interface MqttState {
     connected: boolean;
@@ -38,7 +13,7 @@ const initialState: MqttState = {
     scanResultMessage: undefined,
 };
 
-const mqttSlice = createSlice({
+const MqttSlice = createSlice({
     name: "mqtt",
     initialState,
     reducers: {
@@ -46,11 +21,29 @@ const mqttSlice = createSlice({
             state.connected = action.payload;
         },
         addMessage(state, action: PayloadAction<NewScanMessage>) {
-            state.scanResultMessage = action.payload;
+            if (action.payload) {
+                state.scanResultMessage = action.payload;
+
+                let title = "";
+                let info = "";
+                if (
+                    action.payload.success_type === MqttSuccessType.Success ||
+                    action.payload.success_type === MqttSuccessType.Error
+                ) {
+                    [title, info] = action.payload.message.split("\n");
+                }
+
+                Toast.show({
+                    type: action.payload.success_type.toString().toLowerCase(),
+
+                    text1: title || action.payload.message,
+                    text2: info || "",
+                });
+            }
         },
     },
 });
 
-export const { setConnected, addMessage } = mqttSlice.actions;
+export const { setConnected, addMessage } = MqttSlice.actions;
 
-export default mqttSlice.reducer;
+export default MqttSlice.reducer;

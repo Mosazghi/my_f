@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import { ScrollView } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import ItemView from "@/components/ItemView";
-import { MqttSuccessType, RefrigeratorItem } from "@/redux/mqtt";
 import { fetchItems } from "@/util/fetch";
 import { View, Text } from "react-native";
 import { defaultStyles } from "@/styles";
@@ -11,15 +10,14 @@ import { screenPadding } from "@/constants/tokens";
 import { SearchContext } from "@/util/SearchContext";
 import { useContext } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
-import Toast from "react-native-toast-message";
 
 export default function FridgeScreen() {
     const newScans = useSelector((state: RootState) => state.mqtt.scanResultMessage);
     const mqttConnected = useSelector((state: RootState) => state.mqtt.connected);
 
-    const [items, setItems] = useState<RefrigeratorItem[]>([]);
-    const [todaysItems, setTodaysItems] = useState<RefrigeratorItem[]>([]);
-    const [expiredItems, setExpiredItems] = useState<RefrigeratorItem[]>([]);
+    const items = useSelector((state: RootState) => state.items.allItems);
+    const todaysItems = useSelector((state: RootState) => state.items.todaysItems);
+    const expiredItems = useSelector((state: RootState) => state.items.expiredItems);
 
     const headerHeight = useHeaderHeight();
     const { search } = useContext(SearchContext);
@@ -33,53 +31,9 @@ export default function FridgeScreen() {
     }, [search]);
 
     useEffect(() => {
-        if (newScans !== undefined) {
-            let title = "";
-            let info = "";
-            if (
-                newScans.success_type === MqttSuccessType.Success ||
-                newScans.success_type === MqttSuccessType.Error
-            ) {
-                [title, info] = newScans.message.split("\n");
-            }
-
-            Toast.show({
-                type: newScans.success_type.toString().toLowerCase(),
-
-                text1: title || newScans.message,
-                text2: info || "",
-            });
-        }
-
-        fetchItems().then((data) => {
-            console.info("Fetching items");
-            if (data.success === false) {
-                console.error("Failed to fetch items");
-                return;
-            }
-            setItems(data.items);
-
-            let tempTodaysItems: RefrigeratorItem[] = [];
-            let tempExpiredItems: RefrigeratorItem[] = [];
-
-            data.items.filter((item: RefrigeratorItem) => {
-                const todayDate = new Date();
-                const itemDate = new Date(item.expiration_date); // WARNING: Debug purposes only
-
-                if (
-                    todayDate.getDate() === itemDate.getDate() &&
-                    todayDate.getMonth() === itemDate.getMonth() &&
-                    todayDate.getFullYear() === itemDate.getFullYear()
-                ) {
-                    tempTodaysItems.push(item);
-                }
-
-                if (todayDate > itemDate) tempExpiredItems.push(item);
-            });
-
-            setTodaysItems(tempTodaysItems);
-            setExpiredItems(tempExpiredItems);
-        });
+        (async () => {
+            await fetchItems();
+        })();
     }, [newScans]);
 
     return (
@@ -116,7 +70,3 @@ export default function FridgeScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    itemViewContainer: {},
-});
