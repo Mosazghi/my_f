@@ -62,10 +62,10 @@ export const MqttUtils = {
         client.connect({
             onSuccess: () => {
                 onConnect(topic);
-                callback(); // No error, connection successful
+                callback();
             },
             onFailure: (error: Error) => {
-                callback(error); // Pass the error to the callback
+                callback(error);
             },
             timeout: 3,
             reconnect: true,

@@ -14,6 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import { Image } from "expo-image";
 import Toast from "react-native-toast-message";
 import { deleteItem, fetchItems, updateItem } from "@/util/fetch";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const EditItem = () => {
     const { item } = useLocalSearchParams<{ item: string }>();
@@ -23,7 +24,7 @@ const EditItem = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(parsedItem.name);
     const [expirationDate, setExpirationDate] = useState(
-        new Date(parsedItem.expiration_date).toLocaleDateString()
+        new Date(parsedItem.expiration_date)
     );
     const [quantity, setQuantity] = useState(parsedItem.quantity.toString());
     const [weight, setWeight] = useState(parsedItem.weight || "");
@@ -31,7 +32,7 @@ const EditItem = () => {
     const handleSave = () => {
         const noChangesMade =
             name === parsedItem.name &&
-            expirationDate ===
+            expirationDate.toLocaleDateString() ===
                 new Date(parsedItem.expiration_date).toLocaleDateString() &&
             quantity === parsedItem.quantity.toString() &&
             weight === parsedItem.weight;
@@ -40,7 +41,7 @@ const EditItem = () => {
             (async () => {
                 updateItem(parsedItem.barcode, {
                     name,
-                    expiration_date: expirationDate,
+                    expiration_date: expirationDate.toLocaleDateString(),
                     quantity: parseInt(quantity),
                     weight,
                 }).then(() => fetchItems());
@@ -102,20 +103,15 @@ const EditItem = () => {
                         />
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>
-                            Expiration Date{" "}
-                            <Text style={{ color: "gray", fontStyle: "italic" }}>
-                                {expirationDate > new Date().toLocaleDateString()
-                                    ? "(Good)"
-                                    : "(Expired)"}
-                            </Text>
-                        </Text>
-                        <TextInput
-                            style={{ ...styles.input, borderWidth: isEditing ? 1 : 0 }}
+                        <Text style={styles.label}>Expiration Date </Text>
+                        <DateTimePicker
                             value={expirationDate}
-                            onChangeText={setExpirationDate}
-                            editable={isEditing}
-                            placeholder="Expiration Date"
+                            onChange={(_, selectedDate) =>
+                                setExpirationDate(selectedDate as Date)
+                            }
+                            style={{ flex: 1 }}
+                            minimumDate={new Date()}
+                            themeVariant="light"
                         />
                     </View>
                     <View style={styles.row}>

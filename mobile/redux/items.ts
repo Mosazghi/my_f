@@ -7,12 +7,14 @@ interface ItemsState {
     allItems: Items;
     todaysItems: Items;
     expiredItems: Items;
+    refreshing: boolean;
 }
 
 const initialState: ItemsState = {
     allItems: [],
     todaysItems: [],
     expiredItems: [],
+    refreshing: false,
 };
 
 const ItemsSlice = createSlice({
@@ -28,9 +30,13 @@ const ItemsSlice = createSlice({
         setExpiredItems(state, action: PayloadAction<Items>) {
             state.expiredItems = action.payload;
         },
+        toggleRefreshing(state) {
+            state.refreshing = !state.refreshing;
+        },
     },
 });
 
-export const { setAllItems, setTodaysItems, setExpiredItems } = ItemsSlice.actions;
+export const { setAllItems, setTodaysItems, setExpiredItems, toggleRefreshing } =
+    ItemsSlice.actions;
 
 export default ItemsSlice.reducer;

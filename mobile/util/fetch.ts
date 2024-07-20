@@ -32,7 +32,7 @@ export async function request({ url, method, data, headers }: RequestProps) {
             const errorData = res_json;
             throw new Error(errorData.message || `Failed to ${method} data`);
         }
-    } catch (e: Error) {
+    } catch (e: any) {
         Toast.show({
             type: "error",
             text1: e.message,

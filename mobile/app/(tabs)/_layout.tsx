@@ -6,6 +6,7 @@ import { StyleSheet } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import CustomHeader from "@/components/CustomHeader";
+import { RefreshButton } from "@/components/RefreshButton";
 export default function TabLayout() {
     return (
         <Tabs
@@ -45,7 +46,7 @@ export default function TabLayout() {
                             color={color}
                         />
                     ),
-                    header: () => <CustomHeader />,
+                    header: () => <CustomHeader RightComponent={RefreshButton} />,
                     headerTransparent: true,
                 }}
             />

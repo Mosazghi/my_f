@@ -13,8 +13,13 @@ import { Keyboard } from "react-native";
 type CustomHeaderProps = {
     showSearch?: boolean;
     title?: string;
+    RightComponent?: React.FC;
 };
-const CustomHeader = ({ showSearch = true, title = "My Fridge" }: CustomHeaderProps) => {
+const CustomHeader = ({
+    showSearch = true,
+    title = "My Fridge",
+    RightComponent = ConnectionStatusBar,
+}: CustomHeaderProps) => {
     const { top } = useSafeAreaInsets();
     const { search, setSearch } = useContext(SearchContext);
 
@@ -67,7 +72,7 @@ const CustomHeader = ({ showSearch = true, title = "My Fridge" }: CustomHeaderPr
                         )}
                     </View>
                 )}
-                <ConnectionStatusBar />
+                <RightComponent />
             </View>
         </BlurView>
     );

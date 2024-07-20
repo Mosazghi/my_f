@@ -14,7 +14,6 @@ import { useHeaderHeight } from "@react-navigation/elements";
 export default function FridgeScreen() {
     const newScans = useSelector((state: RootState) => state.mqtt.scanResultMessage);
     const mqttConnected = useSelector((state: RootState) => state.mqtt.connected);
-
     const items = useSelector((state: RootState) => state.items.allItems);
     const todaysItems = useSelector((state: RootState) => state.items.todaysItems);
     const expiredItems = useSelector((state: RootState) => state.items.expiredItems);
@@ -28,7 +27,7 @@ export default function FridgeScreen() {
         return items.filter((item) =>
             (item.name + item.weight).toLowerCase().includes(search.toLowerCase())
         );
-    }, [search]);
+    }, [search, items]);
 
     useEffect(() => {
         (async () => {

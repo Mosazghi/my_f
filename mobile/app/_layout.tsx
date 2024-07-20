@@ -4,7 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { Provider } from "react-redux";
-import Store from "../redux/store";
+import Store from "@/redux/store";
 import { StatusBar } from "expo-status-bar";
 import { SearchProvider } from "@/util/SearchContext";
 import Toast from "react-native-toast-message";
