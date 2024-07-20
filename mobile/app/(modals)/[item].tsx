@@ -90,18 +90,18 @@ const EditItem = () => {
                     />
                 )}
                 <View style={styles.infoContainer}>
-                    <Text style={styles.title}>Edit Item</Text>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>Name</Text>
-                        <TextInput
-                            style={{ ...styles.input, borderWidth: isEditing ? 1 : 0 }}
-                            value={name}
-                            onChangeText={setName}
-                            editable={isEditing}
-                            placeholder="Name"
-                            multiline={true}
-                        />
-                    </View>
+                    <TextInput
+                        style={{
+                            ...styles.input,
+                            ...styles.title,
+                            borderWidth: isEditing ? 1 : 0,
+                        }}
+                        value={name}
+                        onChangeText={setName}
+                        editable={isEditing}
+                        placeholder="Name"
+                        multiline={true}
+                    />
                     <View style={styles.row}>
                         <Text style={styles.label}>Expiration Date </Text>
                         <DateTimePicker
@@ -206,22 +206,22 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginBottom: 10,
+        justifyContent: "space-between",
+        width: "100%",
     },
     input: {
-        flex: 1,
         padding: 10,
         borderWidth: 1,
         borderColor: "#ccc",
         borderRadius: 5,
         color: "black",
-        width: "100%",
+        fontSize: 16,
     },
     label: {
         fontSize: 16,
         fontWeight: "bold",
         marginRight: 10,
         color: "black",
-        width: "50%",
     },
     value: {
         fontWeight: "normal",
