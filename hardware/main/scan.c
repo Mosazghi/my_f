@@ -30,6 +30,7 @@ static void scan_task(void *arg) {
   while (1) {
     int len = uart_read_bytes(PORT_NUM, scan_data.code, (BUF_SIZE - 1),
                               20 / portTICK_PERIOD_MS);
+
     scan_data.hasScanned = (len > 0);
 
     if (scan_data.hasScanned) {

@@ -51,7 +51,7 @@ static void lvgl_init() {
 
   display_set_text(codeLabel, "Enter code: ");
   display_set_text(dateLabel, "Waiting for scan...");
-  display_set_text(statusLabel, "HELLO");
+  display_set_text(statusLabel, "Status:");
 
   lv_obj_set_width(dateLabel, disp->driver->hor_res);
   lv_obj_set_width(codeLabel, disp->driver->hor_res);

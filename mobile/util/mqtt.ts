@@ -51,7 +51,7 @@ function onMessageArrived(message: Paho.MQTT.Message) {
 export const MqttUtils = {
     connect: (host: string, port: number, callback: (error?: Error) => void) => {
         const clientId = "mobile";
-        const topic = "scanResult";
+        const topic = "scan/result";
         client = new Paho.MQTT.Client(host, port, clientId);
 
         console.info("MQTT :: connecting...");

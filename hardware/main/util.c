@@ -2,6 +2,7 @@
 #include "cJSON.h"
 #include "joystick.h"
 #include "mqtt.h"
+
 char *exp_date_to_string(exp_date_t exp_date) {
   char *buf = (char *)malloc(16);
   // return formatted string of expiration date
@@ -17,7 +18,7 @@ int publish_data(exp_date_t exp_date, const char *code) {
   cJSON_AddStringToObject(data, "expDate", exp_date_str);
   char *json = cJSON_Print(data);
 
-  err = mqtt_publish("newScan", json);
+  err = mqtt_publish("scan/new", json);
 
   cJSON_free(json);
   cJSON_Delete(data);

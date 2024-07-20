@@ -12,8 +12,8 @@ use std::{process, time::Duration};
 use types::{ApiResponse, Product, RefrigeratorItemFromMqtt};
 
 pub mod types;
-const TOPIC_NEW_SCAN: &str = "newScan";
-const TOPIC_SCAN_RESULT: &str = "scanResult";
+const TOPIC_NEW_SCAN: &str = "scan/new";
+const TOPIC_SCAN_RESULT: &str = "scan/result";
 const QOS: i32 = 1;
 
 pub struct MqttClient {
