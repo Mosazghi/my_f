@@ -1,5 +1,8 @@
 use route::create_router;
 use std::env;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::{task, time};
 
 pub mod db;
 pub mod mqtt;
@@ -7,13 +10,8 @@ pub mod server;
 pub mod util;
 
 use crate::server::*;
-
-use sqlx::{postgres::PgPoolOptions, PgPool};
-use tokio::task;
-
-use std::sync::Arc;
-
 use dotenv::dotenv;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 
 type Error = Box<dyn std::error::Error>;
 
@@ -31,12 +29,15 @@ async fn main() -> Result<(), Error> {
         .connect(&database_url)
         .await?;
 
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    // Uncomment and fix migration path if needed
+    // sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let mut mqtt_client = mqtt::MqttClient::new(pool.clone()).await;
+    let (mqtt_client, eventloop) = mqtt::new().await;
 
+    let pool_clone_for_task = pool.clone();
     task::spawn(async move {
-        mqtt_client.start().await;
+        mqtt::start(mqtt_client, eventloop, &pool_clone_for_task).await;
+        time::sleep(Duration::from_secs(3)).await
     });
 
     let app = create_router(Arc::new(AppState { db: pool.clone() }));

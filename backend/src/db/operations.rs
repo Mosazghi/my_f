@@ -1,7 +1,7 @@
 use super::models::RefrigeratorItem;
 use crate::{server::handlers::UpdateRefrigeratorItem, util::parse_date};
 use chrono::NaiveDate;
-use sqlx::{postgres::PgQueryResult, PgPool};
+use sqlx::PgPool;
 
 pub async fn insert_refrigerator_item(
     pool: &PgPool,

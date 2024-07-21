@@ -6,7 +6,6 @@ use crate::{
     AppState,
 };
 use axum::{
-    debug_handler,
     extract::{Json, Path, State},
     http::StatusCode,
     response::IntoResponse,
@@ -60,6 +59,7 @@ pub async fn update_item(
     State(data): State<Arc<AppState>>,
     Json(input): Json<UpdateRefrigeratorItem>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    println!("Updating item with barcode: {}", barcode);
     match update_refrigerator_item(&data.db, &barcode, &UpdateRefrigeratorItem { ..input }).await {
         Ok(_) => {
             println!("Item updated successfully.");
@@ -92,6 +92,7 @@ pub async fn delete_item(
     Path(barcode): Path<String>,
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    println!("Deleting item with barcode: {}", barcode);
     match delete_refrigerator_item(&data.db, &barcode).await {
         Ok(_) => Ok((
             StatusCode::OK,
