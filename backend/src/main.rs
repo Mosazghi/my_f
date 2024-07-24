@@ -30,7 +30,7 @@ async fn main() -> Result<(), Error> {
         .await?;
 
     // Uncomment and fix migration path if needed
-    // sqlx::migrate!("./migrations").run(&pool).await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
 
     let (mqtt_client, eventloop) = mqtt::new().await;
 

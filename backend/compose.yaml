@@ -1,9 +1,54 @@
+version: "3.8"
+
 services:
   server:
     build:
       context: .
       target: final
     ports:
-      - 3000:3000
+      - 80:3000
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - ./init-roles.sql:/docker-entrypoint-initdb.d/init-roles.sql
+    environment:
+      - POSTGRES_DB=save_f
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "save_f"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mqtt:
+    image: eclipse-mosquitto
+    restart: always
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep mosquitto || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+  mosquitto-data:
+  mosquitto-log:
