@@ -54,7 +54,7 @@ export const MqttUtils = {
         const topic = "scan/result";
         client = new Paho.MQTT.Client(host, port, clientId);
 
-        console.info("MQTT :: connecting...");
+        console.info("MQTT :: connecting with host", host, "port", port);
 
         client.onConnectionLost = onConnectionLost;
         client.onMessageArrived = onMessageArrived;

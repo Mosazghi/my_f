@@ -19,8 +19,8 @@ import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 
 export default function SettingsScreen() {
-    const [host, setHost] = useState("192.168.1.168");
-    const [port, setPort] = useState("8080");
+    const [host, setHost] = useState("192.168.1.42");
+    const [port, setPort] = useState("9001");
     const [isLoading, setIsLoading] = useState(false);
 
     const headerHeight = useHeaderHeight();
