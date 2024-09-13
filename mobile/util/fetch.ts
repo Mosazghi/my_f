@@ -2,7 +2,7 @@ import { setAllItems, setExpiredItems, setTodaysItems } from "@/redux/items";
 import Store from "@/redux/store";
 import { RefrigeratorItem } from "@/interfaces";
 import Toast from "react-native-toast-message";
-
+const API_URL = "http://192.168.1.42:3000";
 interface RequestProps {
     url: string;
     method: string | "GET" | "POST" | "DELETE" | "PATCH";
@@ -44,7 +44,7 @@ export async function request({ url, method, data, headers }: RequestProps) {
 
 export async function fetchItems() {
     const response = await request({
-        url: "http://192.168.1.168:3000/api/items",
+        url: API_URL + "/api/items",
         method: "GET",
     });
 
@@ -79,7 +79,7 @@ export async function fetchItems() {
 
 export async function updateItem(barcode: string, data: Record<string, any>) {
     const response = await request({
-        url: `http://192.168.1.168:3000/api/items/${barcode}`,
+        url: API_URL + `/api/items/${barcode}`,
         method: "PATCH",
         data,
     });
@@ -94,7 +94,7 @@ export async function updateItem(barcode: string, data: Record<string, any>) {
 
 export async function deleteItem(barcode: string) {
     const response = await request({
-        url: `http://192.168.1.168:3000/api/items/${barcode}`,
+        url: API_URL + `/api/items/${barcode}`,
         method: "DELETE",
     });
 
