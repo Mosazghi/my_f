@@ -1,42 +1,21 @@
-# syntax=docker/dockerfile:1
+FROM rust:1.79-buster AS builder
 
-ARG RUST_VERSION=1.79.0
-ARG APP_NAME=backend
-
-FROM rust:${RUST_VERSION}-alpine AS build
-ARG APP_NAME
 WORKDIR /app
 
-# Install host build dependencies.
-RUN apk add clang lld musl-dev git openssl-dev build-base
+COPY . . 
 
-# Copy source code and build the application.
-COPY . .
+RUN cargo build --release 
 
-# Leverage a cache mount to /app/target/
-# for compiled dependencies which will speed up subsequent builds.
-RUN --mount=type=cache,target=/app/target/ \
-  --mount=type=cache,target=/usr/local/cargo/git/db \
-  --mount=type=cache,target=/usr/local/cargo/registry/ \
-  cargo build --locked --release && \
-  cp ./target/release/$APP_NAME /bin/server
+FROM debian:buster-slim AS final
 
-FROM alpine:3.18 AS final
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+  libcurl4 \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG UID=10001
-RUN adduser \
-  --disabled-password \
-  --gecos "" \
-  --home "/nonexistent" \
-  --shell "/sbin/nologin" \
-  --no-create-home \
-  --uid "${UID}" \
-  appuser
-USER appuser
+WORKDIR /usr/local/bin
 
-COPY --from=build /bin/server /bin/
-COPY --from=build /app/migrations /app/migrations
+COPY --from=builder /app/target/release/backend .
 
-EXPOSE 3000
+EXPOSE 8080
 
-CMD ["/bin/server"]
+CMD ["./backend"]

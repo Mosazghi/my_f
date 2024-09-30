@@ -6,7 +6,7 @@ services:
       context: .
       target: final
     ports:
-      - 80:3000
+      - 80:8080
     env_file:
       - .env
     depends_on:

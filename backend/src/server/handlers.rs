@@ -1,24 +1,34 @@
 use crate::{
     db::{
-        delete_refrigerator_item, get_refrigerator_items, models::RefrigeratorItem,
+        delete_refrigerator_item, get_refrigerator_items, insert_token, models::RefrigeratorItem,
         update_refrigerator_item,
     },
     AppState,
 };
-
-use axum::{
-    extract::{Json, Path, State},
-    http::StatusCode,
-    response::IntoResponse,
-};
+use axum::extract::{Path, State};
+use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+#[derive(Deserialize)]
+pub struct TokenData {
+    pub token: String,
+}
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Response {
     success: bool,
     message: String,
     items: Option<Vec<RefrigeratorItem>>,
+}
+
+pub async fn register_token(
+    State(data): State<Arc<AppState>>,
+    Json(payload): Json<TokenData>,
+) -> Result<impl IntoResponse, StatusCode> {
+    match insert_token(&payload, &data.db).await {
+        Ok(_) => Ok(StatusCode::CREATED),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 pub async fn get_items(

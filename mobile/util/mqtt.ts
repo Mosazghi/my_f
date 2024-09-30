@@ -65,6 +65,7 @@ export const MqttUtils = {
                 callback();
             },
             onFailure: (error: Error) => {
+                console.log("error", error);
                 callback(error);
             },
             timeout: 3,

@@ -7,7 +7,7 @@ import {
     TextInput,
     ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { defaultStyles } from "@/styles";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { screenPadding } from "@/constants/tokens";
@@ -16,10 +16,11 @@ import { RootState } from "@/redux/store";
 import Colors from "@/constants/Colors";
 import MqttUtils from "@/util/mqtt";
 import { useRouter } from "expo-router";
+import { getIpAddressAsync } from "expo-network";
 import Toast from "react-native-toast-message";
 
 export default function SettingsScreen() {
-    const [host, setHost] = useState("192.168.1.42");
+    const [host, setHost] = useState("");
     const [port, setPort] = useState("9001");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +28,15 @@ export default function SettingsScreen() {
     const router = useRouter();
 
     const connected = useSelector((state: RootState) => state.mqtt.connected);
+
+    useEffect(() => {
+        const fetchIP = async () => {
+            const ip = await getIpAddressAsync();
+            setHost(ip);
+        };
+
+        fetchIP();
+    }, []);
 
     const handleConnect = () => {
         if (!connected) {

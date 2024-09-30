@@ -24,12 +24,13 @@ async fn main() -> Result<(), Error> {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    println!("Connecting to database: {}", database_url);
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
         .await?;
+    println!("Connected to database");
 
-    // Uncomment and fix migration path if needed
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     let (mqtt_client, eventloop) = mqtt::new().await;
@@ -42,7 +43,7 @@ async fn main() -> Result<(), Error> {
 
     let app = create_router(Arc::new(AppState { db: pool.clone() }));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
 
     println!("Listening on: http://{}", listener.local_addr().unwrap());
 

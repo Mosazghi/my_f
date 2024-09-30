@@ -180,44 +180,47 @@ pub async fn handle_message(client: &AsyncClient, pool: &PgPool, msg: String) {
 }
 
 async fn fetch_product(ean: &str) -> Option<Product> {
-    // let url = format!("https://kassal.app/api/v1/products/ean/{}", ean);
-    // let client = reqwest::Client::new();
-    // let bearer_token = env::var("BEARER_TOKEN").unwrap_or_default();
-    //
-    // let response = client
-    //     .get(&url)
-    //     .bearer_auth(bearer_token)
-    //     .send()
-    //     .await
-    //     .expect("Failed to send request")
-    //     .json::<ApiResponse>()
-    //     .await;
-    //
-    // match response {
-    //     Ok(response) => {
-    //         let valid_product = response
-    //             .data
-    //             .products
-    //             .clone()
-    //             .into_iter()
-    //             .find(|product| product.weight.is_some())
-    //             .or_else(|| response.data.products.into_iter().next());
-    //
-    //         let nutrition = response.data.nutrition;
-    //         let valid_product = valid_product.map(|product| Product {
-    //             name: product.name,
-    //             weight: product.weight,
-    //             weight_unit: product.weight_unit,
-    //             nutrition: Some(nutrition),
-    //             image: product.image,
-    //         });
-    //         println!("Product found: {:?}", valid_product);
-    //         return Some(valid_product.unwrap());
-    //     }
-    //     Err(_) => {
-    //         eprintln!("Product not found.");
-    //         return None;
-    //     }
-    // };
-    None
+    let url = format!("https://kassal.app/api/v1/products/ean/{}", ean);
+    println!("Fetching product from: {}", url);
+    let client = reqwest::Client::new();
+    println!("Fetching product from: {} 2", url);
+    let bearer_token = env::var("BEARER_TOKEN").unwrap_or_default();
+    // assert_ne!(bearer_token, "");
+    println!("Fetching product from: {} {}", url, bearer_token);
+
+    let response = client
+        .get(&url)
+        .bearer_auth("6cNkZfRSs15I22rR2cv9XY54c7Xq1Myz4PJUV3T0")
+        .send()
+        .await
+        .expect("Failed to send request")
+        .json::<ApiResponse>()
+        .await;
+
+    match response {
+        Ok(response) => {
+            let valid_product = response
+                .data
+                .products
+                .clone()
+                .into_iter()
+                .find(|product| product.weight.is_some())
+                .or_else(|| response.data.products.into_iter().next());
+
+            let nutrition = response.data.nutrition;
+            let valid_product = valid_product.map(|product| Product {
+                name: product.name,
+                weight: product.weight,
+                weight_unit: product.weight_unit,
+                nutrition: Some(nutrition),
+                image: product.image,
+            });
+            println!("Product found: {:?}", valid_product);
+            return Some(valid_product.unwrap());
+        }
+        Err(_) => {
+            eprintln!("Product not found.");
+            return None;
+        }
+    };
 }

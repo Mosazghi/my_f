@@ -1,8 +1,19 @@
 use super::models::RefrigeratorItem;
-use crate::{server::handlers::UpdateRefrigeratorItem, util::parse_date};
+use crate::{handlers::TokenData, server::handlers::UpdateRefrigeratorItem, util::parse_date};
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
+pub async fn insert_token(payload: &TokenData, pool: &PgPool) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO expo_push_token (id, token) VALUES (1, $1)
+         ON CONFLICT (id) DO UPDATE SET token = EXCLUDED.token",
+    )
+    .bind(&payload.token)
+    .execute(pool)
+    .await;
+
+    Ok(())
+}
 pub async fn insert_refrigerator_item(
     pool: &PgPool,
     item: &RefrigeratorItem,

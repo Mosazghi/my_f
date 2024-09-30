@@ -2,7 +2,8 @@ import { setAllItems, setExpiredItems, setTodaysItems } from "@/redux/items";
 import Store from "@/redux/store";
 import { RefrigeratorItem } from "@/interfaces";
 import Toast from "react-native-toast-message";
-const API_URL = "http://192.168.1.42:3000";
+const API_URL = "http://10.24.39.102:80";
+
 interface RequestProps {
     url: string;
     method: string | "GET" | "POST" | "DELETE" | "PATCH";
@@ -14,12 +15,13 @@ export async function request({ url, method, data, headers }: RequestProps) {
     const defaultHeaders = {
         "Content-Type": "application/json",
     };
+    console.info("Requesting: ", url, method, data, headers);
 
     try {
         const response = await fetch(url, {
             method,
             body: data ? JSON.stringify(data) : undefined,
-            headers: { ...defaultHeaders, ...headers },
+            headers: { ...headers },
         });
         const res_json = await response.json();
         if (response.ok) {
@@ -48,7 +50,6 @@ export async function fetchItems() {
         method: "GET",
     });
 
-    console.info("Fetching items");
     if (response === undefined || response.success === false) {
         console.error("Failed to fetch items");
         return;
