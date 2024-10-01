@@ -1,10 +1,3 @@
 # my_f (My Fridge)
+https://github.com/user-attachments/assets/a2ab0397-6a49-4b68-9d65-d17e95c8df22
 
-![1](assets/1.png)
-
-![2](assets/2.png)
-
-![3](assets/3.png)
-
-Editing an item:
-![4](assets/4.png)
