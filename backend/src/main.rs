@@ -19,6 +19,8 @@ pub struct AppState {
     db: PgPool,
 }
 
+use expo_push_notification_client::{Expo, ExpoClientOptions, ExpoPushMessage, ExpoPushTicket};
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     dotenv().ok();
@@ -47,6 +49,59 @@ async fn main() -> Result<(), Error> {
 
     println!("Listening on: http://{}", listener.local_addr().unwrap());
 
+    tokio::spawn(async move {
+        let expo = Expo::new(ExpoClientOptions {
+            access_token: Some(
+                env::var("EXPO_ACCESS_TOKEN").expect("EXPO_ACCESS TOKEN must be set"),
+            ),
+        });
+
+        let expo_push_token = "ExponentPushToken[fMCrTiIxrbZ4zKrrIevgSn]";
+
+        loop {
+            let items = db::get_refrigerator_items(&pool).await.unwrap();
+            let one_day_left = items
+                .iter()
+                .filter(|item| {
+                    item.expiration_date
+                        .signed_duration_since(chrono::Local::now().naive_local().date())
+                        .num_days()
+                        == 1
+                })
+                .collect::<Vec<_>>();
+
+            for (i, item) in one_day_left.iter().enumerate() {
+                let expo_push_message = ExpoPushMessage::builder([expo_push_token])
+                    .title("Expiry Notification")
+                    .body(format!(
+                        "{} is expiring in 1 day ({})!!",
+                        item.name, item.expiration_date
+                    ))
+                    .sound("default")
+                    .build()
+                    .unwrap();
+                match expo.send_push_notifications(expo_push_message).await {
+                    Ok(tickets) => {
+                        for ticket in tickets {
+                            match ticket {
+                                ExpoPushTicket::Ok(receipt) => {
+                                    println!("Notification sent successfully: {:?}", receipt);
+                                }
+                                ExpoPushTicket::Error(error) => {
+                                    eprintln!("Error in push ticket: {:?}", error);
+                                }
+                            }
+                        }
+                    }
+                    Err(error) => {
+                        eprintln!("Failed to send push notification: {:?}", error);
+                    }
+                }
+            }
+
+            tokio::time::sleep(Duration::from_secs(60)).await;
+        }
+    });
     axum::serve(listener, app).await.unwrap();
 
     Ok(())

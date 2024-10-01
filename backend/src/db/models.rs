@@ -16,3 +16,9 @@ pub struct RefrigeratorItem {
     pub weight: Option<String>,
     pub image_url: Option<String>,
 }
+
+#[derive(Debug, FromRow, Serialize, Deserialize, Default)]
+pub struct ExpoPushToken {
+    id: i32,
+    token: String,
+}

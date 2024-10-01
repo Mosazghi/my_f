@@ -24,10 +24,23 @@ pub struct Response {
 pub async fn register_token(
     State(data): State<Arc<AppState>>,
     Json(payload): Json<TokenData>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse, (StatusCode, Json<Response>)> {
+    let mut response = Response {
+        success: false,
+        message: "Failed to insert push token".to_string(),
+        items: None,
+    };
     match insert_token(&payload, &data.db).await {
-        Ok(_) => Ok(StatusCode::CREATED),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(_) => {
+            response = Response {
+                success: true,
+                message: "Push token inserted successfully".to_string(),
+                items: None,
+            };
+            Ok((StatusCode::OK, Json(response)))
+        }
+
+        Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(response))),
     }
 }
 

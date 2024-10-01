@@ -38,14 +38,13 @@ const EditItem = () => {
             weight === parsedItem.weight;
 
         if (!noChangesMade) {
-            (async () => {
-                updateItem(parsedItem.barcode, {
-                    name,
-                    expiration_date: expirationDate.toLocaleDateString(),
-                    quantity: parseInt(quantity),
-                    weight,
-                }).then(() => fetchItems());
-            })();
+            updateItem(parsedItem.barcode, {
+                name,
+                expiration_date: expirationDate.toLocaleDateString(),
+                quantity: parseInt(quantity),
+                weight,
+            }).then(() => fetchItems());
+            console.log("Item updated");
         } else {
             Toast.show({
                 type: "info",
@@ -58,7 +57,7 @@ const EditItem = () => {
     };
 
     const handleDelete = () => {
-        const confirmDelete = async () => {
+        const confirmDelete = () => {
             deleteItem(parsedItem.barcode).then(() => fetchItems());
             router.back();
         };

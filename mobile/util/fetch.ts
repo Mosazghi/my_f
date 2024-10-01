@@ -2,7 +2,7 @@ import { setAllItems, setExpiredItems, setTodaysItems } from "@/redux/items";
 import Store from "@/redux/store";
 import { RefrigeratorItem } from "@/interfaces";
 import Toast from "react-native-toast-message";
-const API_URL = "http://10.24.39.102:80";
+const API_URL = "http://192.168.1.168:80";
 
 interface RequestProps {
     url: string;
@@ -21,7 +21,7 @@ export async function request({ url, method, data, headers }: RequestProps) {
         const response = await fetch(url, {
             method,
             body: data ? JSON.stringify(data) : undefined,
-            headers: { ...headers },
+            headers: { ...defaultHeaders, ...headers },
         });
         const res_json = await response.json();
         if (response.ok) {
@@ -71,7 +71,7 @@ export async function fetchItems() {
             tempTodaysItems.push(item);
         }
 
-        if (todayDate > itemDate) tempExpiredItems.push(item);
+        if (todayDate >= itemDate) tempExpiredItems.push(item);
     });
 
     Store.dispatch(setTodaysItems(tempTodaysItems));
