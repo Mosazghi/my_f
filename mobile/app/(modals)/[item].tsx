@@ -60,6 +60,10 @@ const EditItem = () => {
         const confirmDelete = () => {
             deleteItem(parsedItem.barcode).then(() => fetchItems());
             router.back();
+            Toast.show({
+                type: "success",
+                text1: `Item removed from fridge.`,
+            });
         };
 
         Alert.alert(

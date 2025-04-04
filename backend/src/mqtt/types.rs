@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+ds#[derive(Debug, Deserialize)]
 pub struct RefrigeratorItemFromMqtt {
     pub barcode: String,
     #[serde(rename = "expDate")]
@@ -19,7 +19,7 @@ pub struct Nutrition {
 pub struct ApiResponseData {
     pub ean: String,
     pub products: Vec<Product>,
-    pub nutrition: Vec<Nutrition>,
+ ds   pub nutrition: Vec<Nutrition>,
 }
 
 #[derive(Debug, Deserialize)]

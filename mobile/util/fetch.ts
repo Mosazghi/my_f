@@ -2,7 +2,7 @@ import { setAllItems, setExpiredItems, setTodaysItems } from "@/redux/items";
 import Store from "@/redux/store";
 import { RefrigeratorItem } from "@/interfaces";
 import Toast from "react-native-toast-message";
-const API_URL = "http://192.168.1.168:80";
+const API_URL = "http://10.0.0.7:80";
 
 interface RequestProps {
     url: string;

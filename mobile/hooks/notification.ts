@@ -45,7 +45,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
 }
 
 export function sendTokenToBackend(token: string) {
-    fetch("http://192.168.1.168:80/register-token", {
+    fetch("http://10.0.0.7:80/register-token", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
